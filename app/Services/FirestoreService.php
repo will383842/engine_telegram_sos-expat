@@ -1,0 +1,135 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Services;
+
+use Google\Cloud\Firestore\FirestoreClient;
+use Kreait\Laravel\Firebase\Facades\Firebase;
+use Illuminate\Support\Facades\Log;
+
+class FirestoreService
+{
+    protected ?FirestoreClient $firestore = null;
+
+    /**
+     * Get the Firestore client (lazy singleton).
+     */
+    protected function db(): FirestoreClient
+    {
+        if ($this->firestore === null) {
+            $this->firestore = Firebase::firestore()->database();
+        }
+
+        return $this->firestore;
+    }
+
+    /**
+     * Get a single document from a collection.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getDocument(string $collection, string $docId): ?array
+    {
+        try {
+            $snapshot = $this->db()->collection($collection)->document($docId)->snapshot();
+
+            if (!$snapshot->exists()) {
+                return null;
+            }
+
+            return $snapshot->data();
+        } catch (\Throwable $e) {
+            Log::error('FirestoreService::getDocument failed', [
+                'collection' => $collection,
+                'docId' => $docId,
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Set (create or merge) a document in a collection.
+     */
+    public function setDocument(string $collection, string $docId, array $data, bool $merge = true): void
+    {
+        try {
+            $docRef = $this->db()->collection($collection)->document($docId);
+
+            if ($merge) {
+                $docRef->set($data, ['merge' => true]);
+            } else {
+                $docRef->set($data);
+            }
+        } catch (\Throwable $e) {
+            Log::error('FirestoreService::setDocument failed', [
+                'collection' => $collection,
+                'docId' => $docId,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Query a collection with optional where clauses and limit.
+     *
+     * @param array<int, array{field: string, operator: string, value: mixed}> $where
+     * @return array<int, array<string, mixed>>
+     */
+    public function queryCollection(string $collection, array $where = [], ?int $limit = null): array
+    {
+        try {
+            $query = $this->db()->collection($collection);
+
+            foreach ($where as $condition) {
+                $query = $query->where(
+                    $condition['field'],
+                    $condition['operator'],
+                    $condition['value'],
+                );
+            }
+
+            if ($limit !== null) {
+                $query = $query->limit($limit);
+            }
+
+            $results = [];
+            $documents = $query->documents();
+
+            foreach ($documents as $document) {
+                if ($document->exists()) {
+                    $data = $document->data();
+                    $data['_id'] = $document->id();
+                    $results[] = $data;
+                }
+            }
+
+            return $results;
+        } catch (\Throwable $e) {
+            Log::error('FirestoreService::queryCollection failed', [
+                'collection' => $collection,
+                'error' => $e->getMessage(),
+            ]);
+            return [];
+        }
+    }
+
+    /**
+     * Delete a document from a collection.
+     */
+    public function deleteDocument(string $collection, string $docId): void
+    {
+        try {
+            $this->db()->collection($collection)->document($docId)->delete();
+        } catch (\Throwable $e) {
+            Log::error('FirestoreService::deleteDocument failed', [
+                'collection' => $collection,
+                'docId' => $docId,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+    }
+}
