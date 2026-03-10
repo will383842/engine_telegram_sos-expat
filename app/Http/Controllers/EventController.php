@@ -28,7 +28,7 @@ class EventController extends Controller
      */
     public function userRegistered(Request $request): JsonResponse
     {
-        $data = $request->input('data', $request->all());
+        $data = $request->input('payload', $request->input('data', $request->all()));
         $now = Carbon::now('Europe/Paris');
 
         $variables = [
@@ -51,7 +51,7 @@ class EventController extends Controller
      */
     public function callCompleted(Request $request): JsonResponse
     {
-        $data = $request->input('data', $request->all());
+        $data = $request->input('payload', $request->input('data', $request->all()));
         $now = Carbon::now('Europe/Paris');
 
         $variables = [
@@ -74,7 +74,7 @@ class EventController extends Controller
      */
     public function paymentReceived(Request $request): JsonResponse
     {
-        $data = $request->input('data', $request->all());
+        $data = $request->input('payload', $request->input('data', $request->all()));
         $now = Carbon::now('Europe/Paris');
 
         $variables = [
@@ -95,7 +95,7 @@ class EventController extends Controller
      */
     public function paypalPayment(Request $request): JsonResponse
     {
-        $data = $request->input('data', $request->all());
+        $data = $request->input('payload', $request->input('data', $request->all()));
         $now = Carbon::now('Europe/Paris');
 
         $variables = [
@@ -116,7 +116,7 @@ class EventController extends Controller
      */
     public function newProvider(Request $request): JsonResponse
     {
-        $data = $request->input('data', $request->all());
+        $data = $request->input('payload', $request->input('data', $request->all()));
         $now = Carbon::now('Europe/Paris');
 
         $variables = [
@@ -140,7 +140,7 @@ class EventController extends Controller
      */
     public function newContactMessage(Request $request): JsonResponse
     {
-        $data = $request->input('data', $request->all());
+        $data = $request->input('payload', $request->input('data', $request->all()));
         $now = Carbon::now('Europe/Paris');
 
         $variables = [
@@ -163,7 +163,7 @@ class EventController extends Controller
      */
     public function securityAlert(Request $request): JsonResponse
     {
-        $data = $request->input('data', $request->all());
+        $data = $request->input('payload', $request->input('data', $request->all()));
         $now = Carbon::now('Europe/Paris');
 
         $variables = [
@@ -187,7 +187,7 @@ class EventController extends Controller
      */
     public function negativeReview(Request $request): JsonResponse
     {
-        $data = $request->input('data', $request->all());
+        $data = $request->input('payload', $request->input('data', $request->all()));
         $now = Carbon::now('Europe/Paris');
 
         $variables = [
@@ -210,7 +210,7 @@ class EventController extends Controller
      */
     public function withdrawalRequested(Request $request): JsonResponse
     {
-        $data = $request->input('data', $request->all());
+        $data = $request->input('payload', $request->input('data', $request->all()));
         $now = Carbon::now('Europe/Paris');
 
         $variables = [
@@ -236,7 +236,7 @@ class EventController extends Controller
      */
     public function captainApplication(Request $request): JsonResponse
     {
-        $data = $request->input('data', $request->all());
+        $data = $request->input('payload', $request->input('data', $request->all()));
         $now = Carbon::now('Europe/Paris');
 
         $variables = [
@@ -260,7 +260,7 @@ class EventController extends Controller
      */
     public function withdrawalStatusChanged(Request $request): JsonResponse
     {
-        $data = $request->input('data', $request->all());
+        $data = $request->input('payload', $request->input('data', $request->all()));
         $now = Carbon::now('Europe/Paris');
 
         $statusLabels = [
