@@ -20,11 +20,6 @@ class SendTelegramMessageJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     /**
-     * The queue this job should be dispatched to.
-     */
-    public string $queue = 'telegram-messages';
-
-    /**
      * The number of times the job may be attempted.
      */
     public int $tries = 3;
@@ -47,7 +42,9 @@ class SendTelegramMessageJob implements ShouldQueue
         public readonly string $parseMode = 'HTML',
         public readonly ?array $replyMarkup = null,
         public readonly ?int $messageQueueId = null,
-    ) {}
+    ) {
+        $this->onQueue('telegram-messages');
+    }
 
     /**
      * Execute the job.
