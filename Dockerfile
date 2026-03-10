@@ -64,7 +64,8 @@ RUN echo '[www]' > /usr/local/etc/php-fpm.d/zz-custom.conf \
 RUN echo 'opcache.enable=1' > /usr/local/etc/php/conf.d/opcache-custom.ini \
     && echo 'opcache.memory_consumption=128' >> /usr/local/etc/php/conf.d/opcache-custom.ini \
     && echo 'opcache.max_accelerated_files=10000' >> /usr/local/etc/php/conf.d/opcache-custom.ini \
-    && echo 'opcache.validate_timestamps=0' >> /usr/local/etc/php/conf.d/opcache-custom.ini
+    && echo 'opcache.validate_timestamps=1' >> /usr/local/etc/php/conf.d/opcache-custom.ini \
+    && echo 'opcache.revalidate_freq=2' >> /usr/local/etc/php/conf.d/opcache-custom.ini
 
 EXPOSE 9000
 
