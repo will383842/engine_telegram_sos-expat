@@ -1,0 +1,207 @@
+name: Setup Motivation Engine (one-time)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup:
+    name: Setup Engine Motivation on same VPS
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Setup via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: root
+          password: ${{ secrets.SERVER_PASSWORD }}
+          command_timeout: 12m
+          script: |
+            set -e
+            echo "=== 1. Clone Engine Motivation ==="
+            if [ -d /opt/engine-motivation/.git ]; then
+              echo "Repo exists, pulling..."
+              cd /opt/engine-motivation
+              git fetch origin main
+              git reset --hard origin/main
+            else
+              git clone https://github.com/will383842/Engine_Motivation.git /opt/engine-motivation
+            fi
+
+            cd /opt/engine-motivation
+
+            echo "=== 2. Create .env.production ==="
+            APP_KEY=$(openssl rand -base64 32)
+            cat > .env.production << 'ENVEOF'
+APP_NAME="Motivation Engine"
+APP_ENV=production
+APP_DEBUG=false
+APP_TIMEZONE=UTC
+APP_URL=https://motivation.life-expat.com
+
+APP_LOCALE=fr
+APP_FALLBACK_LOCALE=en
+APP_FAKER_LOCALE=fr_FR
+
+LOG_CHANNEL=stack
+LOG_STACK=single
+LOG_DEPRECATIONS_CHANNEL=null
+LOG_LEVEL=info
+
+DB_CONNECTION=pgsql
+DB_HOST=mt-postgres
+DB_PORT=5432
+DB_DATABASE=motivation_engine
+DB_USERNAME=motivation
+DB_PASSWORD=WJullin1974Motiv
+
+REDIS_CLIENT=phpredis
+REDIS_HOST=mt-redis
+REDIS_PASSWORD=
+REDIS_PORT=6379
+
+QUEUE_CONNECTION=redis
+CACHE_STORE=redis
+SESSION_DRIVER=redis
+SESSION_LIFETIME=120
+
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_ADMIN_CHAT_ID=
+TELEGRAM_WEBHOOK_SECRET=
+
+TWILIO_SID=
+TWILIO_AUTH_TOKEN=
+TWILIO_WHATSAPP_FROM=+14155238886
+
+FIREBASE_WEBHOOK_SECRET=
+
+WHATSAPP_WARMUP_START_DATE=
+WHATSAPP_DAILY_BUDGET_CENTS=2000
+WHATSAPP_MONTHLY_BUDGET_CENTS=30000
+
+ADMIN_DEFAULT_PASSWORD=MJMJsblanc19522008/*%$
+ADMIN_ALERT_EMAIL=williamsjullin@gmail.com
+ADMIN_ALERT_PHONE=
+ADMIN_ALLOWED_IPS=
+
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.zoho.eu
+MAIL_PORT=587
+MAIL_USERNAME=
+MAIL_PASSWORD=
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS="noreply@motivation.life-expat.com"
+MAIL_FROM_NAME="Motivation Engine"
+ENVEOF
+
+            sed -i "s|APP_KEY=.*|APP_KEY=base64:${APP_KEY}|" .env.production
+
+            echo "=== 3. Build and start containers ==="
+            docker compose build --no-cache
+            docker compose up -d
+
+            echo "=== 4. Wait for PostgreSQL ==="
+            sleep 10
+            docker compose exec -T postgres pg_isready -U motivation || sleep 5
+
+            echo "=== 5. Run migrations ==="
+            docker compose exec -T app php artisan migrate --force
+
+            echo "=== 6. Seed data ==="
+            docker compose exec -T app php artisan db:seed --class=AdminUserSeeder --force || echo "AdminUserSeeder skipped"
+            docker compose exec -T app php artisan db:seed --class=MessageTemplateSeeder --force || echo "MessageTemplateSeeder skipped"
+
+            echo "=== 7. Optimize ==="
+            docker compose exec -T app php artisan optimize
+
+            echo "=== 8. Setup reverse proxy ==="
+            # Install host nginx if not present
+            if ! command -v nginx &> /dev/null; then
+              echo "Installing host nginx..."
+              apt-get update -qq && apt-get install -y -qq nginx
+
+              # Move bl-nginx from port 80 to internal port
+              if [ -f /opt/backlink-engine/docker-compose.yml ]; then
+                sed -i 's/"80:80"/"127.0.0.1:8081:80"/' /opt/backlink-engine/docker-compose.yml
+                cd /opt/backlink-engine && docker compose up -d --force-recreate nginx && cd /opt/engine-motivation
+              fi
+
+              # Create reverse proxy config for all apps
+              cat > /etc/nginx/sites-available/reverse-proxy << 'RPEOF'
+server {
+    listen 80;
+    server_name backlinks.life-expat.com;
+    client_max_body_size 10M;
+    location / {
+        proxy_pass http://127.0.0.1:8081;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+
+server {
+    listen 80;
+    server_name telegram.life-expat.com;
+    client_max_body_size 10M;
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+server {
+    listen 80;
+    server_name motivation.life-expat.com;
+    client_max_body_size 10M;
+    location / {
+        proxy_pass http://127.0.0.1:8082;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+RPEOF
+
+              ln -sf /etc/nginx/sites-available/reverse-proxy /etc/nginx/sites-enabled/reverse-proxy
+              rm -f /etc/nginx/sites-enabled/default
+              nginx -t && systemctl start nginx && systemctl enable nginx
+            else
+              # Host nginx exists, add motivation block
+              cat > /etc/nginx/sites-available/motivation << 'MTEOF'
+server {
+    listen 80;
+    server_name motivation.life-expat.com;
+    client_max_body_size 10M;
+    location / {
+        proxy_pass http://127.0.0.1:8082;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+MTEOF
+              ln -sf /etc/nginx/sites-available/motivation /etc/nginx/sites-enabled/motivation
+              nginx -t && systemctl reload nginx
+            fi
+
+            echo "=== 9. Status ==="
+            docker ps --filter 'name=mt-' --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+            echo ""
+            curl -s http://127.0.0.1:8082/up | head -10 || echo "Health pending..."
+            echo ""
+            echo "=== SETUP COMPLETE ==="
