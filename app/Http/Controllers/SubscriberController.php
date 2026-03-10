@@ -14,15 +14,18 @@ class SubscriberController extends Controller
     ) {}
 
     /**
-     * Return subscriber statistics from local DB and Firestore.
+     * Return subscriber statistics.
+     *
+     * Frontend expects: { total: number, breakdown: Record<string, number>, countedAt?: string }
      */
     public function stats(): JsonResponse
     {
         $stats = $this->statsService->getStats();
 
         return response()->json([
-            'success' => true,
-            'stats'   => $stats,
+            'total'     => $stats['total_subscribers'] ?? 0,
+            'breakdown' => $stats['by_role'] ?? [],
+            'countedAt' => now()->toIso8601String(),
         ]);
     }
 }

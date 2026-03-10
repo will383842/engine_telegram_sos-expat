@@ -19,55 +19,92 @@ class AdminController extends Controller
 
     /**
      * Return the current admin configuration.
+     *
+     * Frontend expects: { exists: boolean, data: { recipientChatId, notifications, updatedAt, updatedBy } }
      */
     public function getConfig(): JsonResponse
     {
         $config = AdminConfig::current();
 
         return response()->json([
-            'success' => true,
-            'config'  => $config->toArray(),
+            'exists' => true,
+            'data'   => [
+                'recipientPhoneNumber' => $config->recipient_phone_number,
+                'recipientChatId'      => $config->recipient_chat_id,
+                'notifications'        => $config->notifications ?? [],
+                'updatedAt'            => $config->updated_at?->toIso8601String(),
+                'updatedBy'            => $config->updated_by,
+            ],
         ]);
     }
 
     /**
      * Update the admin configuration.
+     *
+     * Frontend sends camelCase: { recipientChatId, notifications }
      */
     public function updateConfig(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'recipient_phone_number' => 'nullable|string|max:20',
-            'recipient_chat_id'      => 'nullable|string|max:64',
-            'notifications'          => 'nullable|array',
-            'notifications.*'        => 'boolean',
+            'recipientPhoneNumber' => 'nullable|string|max:20',
+            'recipientChatId'      => 'nullable|string|max:64',
+            'notifications'        => 'nullable|array',
+            'notifications.*'      => 'boolean',
         ]);
 
         $config = AdminConfig::current();
-        $config->fill($validated);
+
+        if (array_key_exists('recipientPhoneNumber', $validated)) {
+            $config->recipient_phone_number = $validated['recipientPhoneNumber'];
+        }
+        if (array_key_exists('recipientChatId', $validated)) {
+            $config->recipient_chat_id = $validated['recipientChatId'];
+        }
+        if (array_key_exists('notifications', $validated)) {
+            $config->notifications = $validated['notifications'];
+        }
+
         $config->updated_by = $request->input('firebase_uid', 'admin');
         $config->save();
 
         return response()->json([
-            'success' => true,
-            'config'  => $config->fresh()->toArray(),
+            'exists' => true,
+            'data'   => [
+                'recipientPhoneNumber' => $config->recipient_phone_number,
+                'recipientChatId'      => $config->recipient_chat_id,
+                'notifications'        => $config->notifications ?? [],
+                'updatedAt'            => $config->updated_at?->toIso8601String(),
+                'updatedBy'            => $config->updated_by,
+            ],
         ]);
     }
 
     /**
      * Validate the Telegram bot token by calling getMe.
+     *
+     * Frontend expects: { ok: boolean, botUsername: string }
      */
     public function validateBot(): JsonResponse
     {
-        $botInfo = $this->botService->validateBot();
+        try {
+            $botInfo = $this->botService->validateBot();
 
-        return response()->json([
-            'success' => true,
-            'bot'     => $botInfo,
-        ]);
+            return response()->json([
+                'ok'          => true,
+                'botUsername'  => $botInfo['username'] ?? '',
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'ok'    => false,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
      * Get the chat ID from recent /start messages sent to the bot.
+     *
+     * Frontend expects: { ok: boolean, chatId?: string, error?: string }
      */
     public function getChatId(): JsonResponse
     {
@@ -89,25 +126,32 @@ class AdminController extends Controller
             $config = AdminConfig::current();
             $config->recipient_chat_id = $chatId;
             $config->save();
+
+            return response()->json([
+                'ok'     => true,
+                'chatId' => $chatId,
+            ]);
         }
 
         return response()->json([
-            'success' => true,
-            'chatId'  => $chatId,
+            'ok'    => false,
+            'error' => 'Chat ID non trouvé. Envoyez /start au bot d\'abord.',
         ]);
     }
 
     /**
      * Send a test notification to verify the bot configuration.
+     *
+     * Frontend sends: { eventType: string, message?: string }
      */
     public function sendTest(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'event_type' => 'nullable|string|max:64',
-            'message'    => 'nullable|string|max:4096',
+            'eventType' => 'nullable|string|max:64',
+            'message'   => 'nullable|string|max:4096',
         ]);
 
-        $eventType = $validated['event_type'] ?? 'test';
+        $eventType = $validated['eventType'] ?? 'test';
 
         $variables = [
             'TEST'    => 'true',

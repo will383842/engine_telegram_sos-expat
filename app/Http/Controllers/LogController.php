@@ -11,38 +11,62 @@ use Illuminate\Http\Request;
 class LogController extends Controller
 {
     /**
-     * Return paginated notification logs with optional filters.
+     * Return notification logs with cursor-based pagination.
+     *
+     * Frontend expects: { logs: LogEntry[], nextCursor: string|null, count: number }
+     * Query params: limit, eventType, status, startAfter (cursor = log id)
      */
     public function index(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'event_type' => 'nullable|string|max:64',
+            'eventType'  => 'nullable|string|max:64',
             'status'     => 'nullable|string|in:sent,failed,filtered',
-            'from'       => 'nullable|date',
-            'to'         => 'nullable|date',
-            'per_page'   => 'nullable|integer|min:1|max:100',
+            'limit'      => 'nullable|integer|min:1|max:100',
+            'startAfter' => 'nullable|string',
         ]);
 
-        $query = NotificationLog::query()->orderByDesc('created_at');
+        $query = NotificationLog::query()->orderByDesc('id');
 
-        if (!empty($validated['event_type'])) {
-            $query->byEventType($validated['event_type']);
+        if (!empty($validated['eventType'])) {
+            $query->byEventType($validated['eventType']);
         }
 
         if (!empty($validated['status'])) {
             $query->byStatus($validated['status']);
         }
 
-        if (!empty($validated['from']) && !empty($validated['to'])) {
-            $query->betweenDates($validated['from'], $validated['to']);
+        // Cursor-based pagination: startAfter = last seen ID
+        if (!empty($validated['startAfter'])) {
+            $query->where('id', '<', (int) $validated['startAfter']);
         }
 
-        $perPage = (int) ($validated['per_page'] ?? 25);
-        $logs    = $query->paginate($perPage);
+        $limit = (int) ($validated['limit'] ?? 30);
+        $logs = $query->limit($limit + 1)->get();
+
+        $hasMore = $logs->count() > $limit;
+        if ($hasMore) {
+            $logs = $logs->take($limit);
+        }
+
+        $nextCursor = $hasMore && $logs->isNotEmpty()
+            ? (string) $logs->last()->id
+            : null;
+
+        // Map to frontend LogEntry format (camelCase)
+        $mapped = $logs->map(fn ($log) => [
+            'id'                => (string) $log->id,
+            'eventType'         => $log->event_type,
+            'status'            => $log->status,
+            'recipientChatId'   => $log->chat_id,
+            'errorMessage'      => $log->error,
+            'telegramMessageId' => null,
+            'sentAt'            => $log->created_at?->toIso8601String(),
+        ]);
 
         return response()->json([
-            'success' => true,
-            'logs'    => $logs,
+            'logs'       => $mapped->values(),
+            'nextCursor' => $nextCursor,
+            'count'      => $mapped->count(),
         ]);
     }
 }
