@@ -62,7 +62,7 @@ services:
       dockerfile: Dockerfile
     container_name: tg-queue
     restart: unless-stopped
-    entrypoint: ["php", "artisan", "queue:work", "redis", "--queue=telegram-messages,telegram-campaigns,default", "--sleep=3", "--tries=3", "--max-time=3600"]
+    command: ["php", "artisan", "queue:work", "redis", "--queue=telegram-messages,telegram-campaigns,default", "--sleep=3", "--tries=3", "--max-time=3600"]
     env_file:
       - .env.production
     depends_on:
@@ -82,7 +82,7 @@ services:
       dockerfile: Dockerfile
     container_name: tg-scheduler
     restart: unless-stopped
-    entrypoint: ["/bin/sh", "-c", "while true; do php artisan schedule:run --verbose; sleep 60; done"]
+    command: ["/bin/sh", "-c", "while true; do php artisan schedule:run --verbose; sleep 60; done"]
     env_file:
       - .env.production
     depends_on:
