@@ -38,15 +38,19 @@ RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
 # Copy application code
 COPY . .
 
-# Generate autoloader & cache
-RUN composer dump-autoload --optimize \
-    && php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache
+# Generate autoloader
+RUN composer dump-autoload --optimize
+
+# Create shared public directory
+RUN mkdir -p /var/www/html/public-shared
 
 # Set permissions
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public-shared \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
+# Entrypoint
+COPY deploy/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # PHP-FPM config
 RUN echo '[www]' > /usr/local/etc/php-fpm.d/zz-custom.conf \
@@ -64,4 +68,5 @@ RUN echo 'opcache.enable=1' > /usr/local/etc/php/conf.d/opcache-custom.ini \
 
 EXPOSE 9000
 
+ENTRYPOINT ["entrypoint.sh"]
 CMD ["php-fpm"]

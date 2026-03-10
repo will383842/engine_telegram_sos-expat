@@ -50,6 +50,7 @@ services:
       redis:
         condition: service_healthy
     volumes:
+      - public_shared:/var/www/html/public-shared
       - app_storage:/var/www/html/storage
       - ./storage/app/firebase-credentials.json:/var/www/html/storage/app/firebase-credentials.json:ro
     networks:
@@ -103,6 +104,7 @@ services:
       - "127.0.0.1:8080:80"
     volumes:
       - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - public_shared:/var/www/html/public:ro
     depends_on:
       - app
     networks:
@@ -115,6 +117,8 @@ volumes:
   redis_data:
     driver: local
   app_storage:
+    driver: local
+  public_shared:
     driver: local
 
 networks:
