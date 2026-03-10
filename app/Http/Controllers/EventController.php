@@ -33,9 +33,9 @@ class EventController extends Controller
 
         $variables = [
             'ROLE_FR'  => $this->translateRole($data['role'] ?? 'unknown'),
-            'EMAIL'    => $data['email'] ?? 'N/A',
+            'EMAIL'    => $data['email'] ?? $data['displayName'] ?? 'N/A',
             'PHONE'    => $data['phone'] ?? $data['phoneNumber'] ?? 'N/A',
-            'COUNTRY'  => $data['country'] ?? 'N/A',
+            'COUNTRY'  => $data['country'] ?? $data['residenceCountry'] ?? 'N/A',
             'DATE'     => $now->format('d/m/Y'),
             'TIME'     => $now->format('H:i'),
         ];
@@ -58,7 +58,7 @@ class EventController extends Controller
             'CLIENT_NAME'      => $data['clientName'] ?? 'N/A',
             'PROVIDER_NAME'    => $data['providerName'] ?? 'N/A',
             'PROVIDER_TYPE_FR' => $this->translateRole($data['providerType'] ?? $data['providerRole'] ?? 'unknown'),
-            'DURATION_MINUTES' => (string) round(($data['duration'] ?? $data['durationSeconds'] ?? 0) / 60, 1),
+            'DURATION_MINUTES' => (string) ($data['durationMinutes'] ?? round(($data['duration'] ?? $data['durationSeconds'] ?? 0) / 60, 1)),
             'DATE'             => $now->format('d/m/Y'),
             'TIME'             => $now->format('H:i'),
         ];
@@ -120,7 +120,7 @@ class EventController extends Controller
         $now = Carbon::now('Europe/Paris');
 
         $variables = [
-            'PROVIDER_NAME'    => trim(($data['firstName'] ?? '') . ' ' . ($data['lastName'] ?? '')) ?: 'N/A',
+            'PROVIDER_NAME'    => $data['displayName'] ?? trim(($data['firstName'] ?? '') . ' ' . ($data['lastName'] ?? '')) ?: 'N/A',
             'PROVIDER_TYPE_FR' => $this->translateRole($data['providerType'] ?? $data['role'] ?? 'unknown'),
             'EMAIL'            => $data['email'] ?? 'N/A',
             'PHONE'            => $data['phone'] ?? $data['phoneNumber'] ?? 'N/A',
@@ -217,10 +217,10 @@ class EventController extends Controller
             'USER_NAME'       => $data['userName'] ?? $data['name'] ?? 'N/A',
             'USER_TYPE_FR'    => $this->translateRole($data['userType'] ?? $data['role'] ?? 'unknown'),
             'AMOUNT'          => number_format(($data['amount'] ?? $data['amountCents'] ?? 0) / 100, 2) . '$',
-            'PAYMENT_METHOD'  => $data['paymentMethod'] ?? 'N/A',
+            'PAYMENT_METHOD'  => $data['paymentMethod'] ?? $this->formatMethodType($data['methodType'] ?? null, $data['provider'] ?? null),
             'PAYMENT_DETAILS' => $data['paymentDetails'] ?? 'N/A',
             'COUNTRY'         => $data['country'] ?? 'N/A',
-            'ADMIN_URL'       => $data['adminUrl'] ?? 'https://sos-expat.com/admin/payments',
+            'ADMIN_URL'       => $data['adminUrl'] ?? 'https://sos-expat.com/admin/payments/withdrawals',
             'DATE'            => $now->format('d/m/Y'),
             'TIME'            => $now->format('H:i'),
         ];
@@ -305,16 +305,35 @@ class EventController extends Controller
     private function translateRole(string $role): string
     {
         return match (strtolower($role)) {
-            'chatter'                  => 'Chatter',
-            'influencer'               => 'Influenceur',
-            'blogger'                  => 'Blogueur',
-            'groupadmin', 'group_admin' => 'Admin Groupe',
-            'partner'                  => 'Partenaire',
-            'lawyer'                   => 'Avocat',
-            'expat'                    => 'Expert expatriation',
-            'client'                   => 'Client',
-            'admin'                    => 'Administrateur',
-            default                    => ucfirst($role),
+            'chatter'                              => 'Chatter',
+            'influencer'                           => 'Influenceur',
+            'blogger'                              => 'Blogueur',
+            'groupadmin', 'group_admin'            => 'Admin Groupe',
+            'partner'                              => 'Partenaire',
+            'lawyer'                               => 'Avocat',
+            'expat'                                => 'Expert expatriation',
+            'client'                               => 'Client',
+            'admin'                                => 'Administrateur',
+            'captain'                              => 'Capitaine',
+            'captainchatter', 'captain_chatter'    => 'Capitaine Chatter',
+            default                                => ucfirst($role),
+        };
+    }
+
+    /**
+     * Format payment method type from Firebase fields.
+     */
+    private function formatMethodType(?string $methodType, ?string $provider): string
+    {
+        if (!$methodType && !$provider) {
+            return 'N/A';
+        }
+
+        return match ($methodType) {
+            'mobile_money'   => 'Mobile Money' . ($provider ? " ({$provider})" : ''),
+            'bank_transfer'  => $provider === 'wise' ? 'Wise (Virement)' : 'Virement bancaire',
+            'wise'           => 'Wise (Virement)',
+            default          => ucfirst($provider ?? $methodType ?? 'N/A'),
         };
     }
 }
