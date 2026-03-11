@@ -15,8 +15,9 @@ class VerifyFirebaseAdmin
     /**
      * Validate Firebase Auth ID token AND check that the user has admin role.
      *
-     * Delegates token verification to VerifyFirebaseToken logic, then adds
-     * the admin-role gate.
+     * Reads the `role` custom claim directly from the JWT token.
+     * Custom claims are set by Firebase Functions (syncRoleClaims.ts)
+     * via admin.auth().setCustomUserClaims(uid, { role }).
      */
     public function handle(Request $request, Closure $next): Response
     {
@@ -41,25 +42,16 @@ class VerifyFirebaseAdmin
                 ], Response::HTTP_UNAUTHORIZED);
             }
 
-            // Check admin role from Firestore
-            $isAdmin = false;
-
-            try {
-                $firestore = Firebase::firestore()->database();
-                $userDoc   = $firestore->collection('users')->document($uid)->snapshot();
-
-                if ($userDoc->exists()) {
-                    $data    = $userDoc->data();
-                    $isAdmin = ($data['role'] ?? '') === 'admin';
-                }
-            } catch (\Throwable $e) {
-                Log::warning('VerifyFirebaseAdmin: Could not check admin role', [
-                    'uid'   => $uid,
-                    'error' => $e->getMessage(),
-                ]);
-            }
+            // Read role from JWT custom claims (set by Firebase syncRoleClaims trigger)
+            $role    = $verifiedToken->claims()->get('role', '');
+            $isAdmin = $role === 'admin';
 
             if (!$isAdmin) {
+                Log::info('VerifyFirebaseAdmin: Access denied — not admin', [
+                    'uid'  => $uid,
+                    'role' => $role ?: 'none',
+                ]);
+
                 return response()->json([
                     'error' => 'Forbidden. Admin role required.',
                 ], Response::HTTP_FORBIDDEN);

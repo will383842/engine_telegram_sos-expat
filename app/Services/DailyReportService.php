@@ -139,7 +139,7 @@ class DailyReportService
                 $counts['total']++;
                 $role = $user['role'] ?? 'client';
 
-                if (in_array($role, ['chatter', 'influencer', 'blogger', 'groupAdmin'], true)) {
+                if (in_array($role, ['chatter', 'influencer', 'blogger', 'groupAdmin', 'group_admin', 'captain', 'captain_chatter', 'partner'], true)) {
                     $counts['affiliates']++;
                 } elseif (in_array($role, ['provider', 'lawyer', 'expat_expert'], true)) {
                     $counts['providers']++;

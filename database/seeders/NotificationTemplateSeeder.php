@@ -225,6 +225,18 @@ class NotificationTemplateSeeder extends Seeder
             ]
         );
 
-        $this->command->info('Seeded 3 Telegram bots (main + inbox + withdrawals)');
+        // Onboarding bot (user registration — no admin notifications)
+        TelegramBot::updateOrCreate(
+            ['slug' => 'onboarding'],
+            [
+                'name' => 'SOS Expat Onboarding Bot',
+                'token' => env('TELEGRAM_ONBOARDING_BOT_TOKEN', ''),
+                'recipient_chat_id' => '',
+                'notifications' => [], // No admin notifications — user-facing only
+                'is_active' => true,
+            ]
+        );
+
+        $this->command->info('Seeded 4 Telegram bots (main + inbox + withdrawals + onboarding)');
     }
 }

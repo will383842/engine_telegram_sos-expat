@@ -21,7 +21,7 @@ class OnboardingController extends Controller
     {
         $validated = $request->validate([
             'userId' => 'required|string|max:128',
-            'role'   => 'required|string|in:chatter,influencer,blogger,group_admin',
+            'role'   => 'required|string|in:chatter,influencer,blogger,group_admin,client,lawyer,expat,partner,captain,captain_chatter,affiliate',
         ]);
 
         $result = $this->onboardingService->generateLink(

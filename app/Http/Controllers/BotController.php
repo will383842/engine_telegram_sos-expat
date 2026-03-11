@@ -6,16 +6,19 @@ namespace App\Http\Controllers;
 
 use App\Services\OnboardingService;
 use App\Services\TelegramBotService;
+use App\Services\TelegramGroupService;
 use App\Services\WithdrawalConfirmationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use SergiX44\Nutgram\Nutgram;
 
 class BotController extends Controller
 {
     public function __construct(
         private readonly TelegramBotService $botService,
         private readonly OnboardingService $onboardingService,
+        private readonly TelegramGroupService $telegramGroupService,
         private readonly WithdrawalConfirmationService $withdrawalService,
     ) {}
 
@@ -49,8 +52,106 @@ class BotController extends Controller
         }
     }
 
+    /**
+     * Handle incoming webhook from the onboarding bot.
+     */
+    public function handleOnboardingWebhook(Request $request): JsonResponse
+    {
+        $update = $request->all();
+
+        try {
+            if (isset($update['message'])) {
+                return $this->handleOnboardingMessage($update['message']);
+            }
+
+            return response()->json(['ok' => true]);
+        } catch (\Throwable $e) {
+            Log::error('Onboarding bot webhook error', [
+                'error'  => $e->getMessage(),
+                'update' => $update,
+            ]);
+
+            return response()->json(['ok' => true]);
+        }
+    }
+
     /* ------------------------------------------------------------------
-     * Message handling
+     * Onboarding bot message handling
+     * ---------------------------------------------------------------- */
+
+    private function handleOnboardingMessage(array $message): JsonResponse
+    {
+        $text   = $message['text'] ?? '';
+        $chatId = (string) ($message['chat']['id'] ?? '');
+        $from   = $message['from'] ?? [];
+
+        if ($chatId === '') {
+            return response()->json(['ok' => true]);
+        }
+
+        $onboardingBot = $this->getOnboardingBotInstance();
+        if (!$onboardingBot) {
+            Log::error('Onboarding bot token not configured');
+            return response()->json(['ok' => true]);
+        }
+
+        // /start CODE — onboarding deep link
+        if (str_starts_with($text, '/start ')) {
+            $code = trim(substr($text, 7));
+
+            if ($code !== '') {
+                $result = $this->onboardingService->handleBotStart(
+                    telegramId: (int) ($from['id'] ?? 0),
+                    telegramUsername: $from['username'] ?? '',
+                    firstName: $from['first_name'] ?? '',
+                    lastName: $from['last_name'] ?? '',
+                    code: $code,
+                );
+
+                if ($result['success'] && $result['link']) {
+                    // Send welcome message with group link
+                    $welcomeMessage = $this->telegramGroupService->buildWelcomeMessage(
+                        $from['first_name'] ?? 'Utilisateur',
+                        $result['link']->role,
+                        $result['group'],
+                    );
+                    $this->botService->sendMessageWithBot($onboardingBot, $chatId, $welcomeMessage);
+                } else {
+                    // Send error message
+                    $errorMessage = $this->telegramGroupService->buildErrorMessage(
+                        $result['errorType'] ?? 'invalid'
+                    );
+                    $this->botService->sendMessageWithBot($onboardingBot, $chatId, $errorMessage);
+                }
+
+                return response()->json(['ok' => true]);
+            }
+        }
+
+        // Plain /start without code
+        if ($text === '/start') {
+            $this->botService->sendMessageWithBot(
+                $onboardingBot,
+                $chatId,
+                "👋 Bienvenue sur SOS-Expat !\n\n"
+                . "Pour lier votre compte Telegram, utilisez le lien depuis votre dashboard SOS-Expat.\n\n"
+                . "📱 https://sos-expat.com",
+            );
+            return response()->json(['ok' => true]);
+        }
+
+        // Any other message
+        $this->botService->sendMessageWithBot(
+            $onboardingBot,
+            $chatId,
+            "Pour lier votre compte, utilisez le lien depuis votre dashboard SOS-Expat.\n📱 https://sos-expat.com",
+        );
+
+        return response()->json(['ok' => true]);
+    }
+
+    /* ------------------------------------------------------------------
+     * Admin bot message handling
      * ---------------------------------------------------------------- */
 
     private function handleMessage(array $message): JsonResponse
@@ -63,18 +164,32 @@ class BotController extends Controller
             return response()->json(['ok' => true]);
         }
 
-        // /start CODE — onboarding deep link
+        // /start CODE — onboarding deep link (backward compat if someone uses main bot)
         if (str_starts_with($text, '/start ')) {
             $code = trim(substr($text, 7));
 
             if ($code !== '') {
-                $this->onboardingService->handleBotStart(
+                $result = $this->onboardingService->handleBotStart(
                     telegramId: (int) ($from['id'] ?? 0),
                     telegramUsername: $from['username'] ?? '',
                     firstName: $from['first_name'] ?? '',
                     lastName: $from['last_name'] ?? '',
                     code: $code,
                 );
+
+                if ($result['success'] && $result['link']) {
+                    $welcomeMessage = $this->telegramGroupService->buildWelcomeMessage(
+                        $from['first_name'] ?? 'Utilisateur',
+                        $result['link']->role,
+                        $result['group'],
+                    );
+                    $this->botService->sendMessage($chatId, $welcomeMessage);
+                } else {
+                    $errorMessage = $this->telegramGroupService->buildErrorMessage(
+                        $result['errorType'] ?? 'invalid'
+                    );
+                    $this->botService->sendMessage($chatId, $errorMessage);
+                }
 
                 return response()->json(['ok' => true]);
             }
@@ -226,5 +341,19 @@ class BotController extends Controller
         }
 
         return response()->json(['ok' => true]);
+    }
+
+    /* ------------------------------------------------------------------
+     * Helpers
+     * ---------------------------------------------------------------- */
+
+    private function getOnboardingBotInstance(): ?Nutgram
+    {
+        $token = config('telegram.onboarding_bot_token');
+        if (!$token) {
+            return null;
+        }
+
+        return TelegramBotService::forToken($token);
     }
 }

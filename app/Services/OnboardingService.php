@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\OnboardingLink;
+use App\Models\TelegramGroup;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -13,6 +14,7 @@ class OnboardingService
 {
     public function __construct(
         protected FirestoreService $firestoreService,
+        protected TelegramGroupService $telegramGroupService,
     ) {}
 
     /**
@@ -92,7 +94,10 @@ class OnboardingService
     /**
      * Handle a /start command from the Telegram bot.
      *
-     * Links the Telegram account to the user's onboarding link.
+     * Links the Telegram account, syncs to Firestore, and returns context
+     * for sending a welcome message with the appropriate group link.
+     *
+     * @return array{success: bool, link: ?OnboardingLink, group: ?TelegramGroup, errorType: ?string}
      */
     public function handleBotStart(
         int $telegramId,
@@ -100,7 +105,7 @@ class OnboardingService
         string $firstName,
         string $lastName,
         string $code,
-    ): bool {
+    ): array {
         $link = OnboardingLink::where('code', $code)
             ->where('status', 'pending')
             ->first();
@@ -110,14 +115,14 @@ class OnboardingService
                 'code' => $code,
                 'telegram_id' => $telegramId,
             ]);
-            return false;
+            return ['success' => false, 'link' => null, 'group' => null, 'errorType' => 'invalid'];
         }
 
         // Check expiry
         if ($link->expires_at && Carbon::parse($link->expires_at)->isPast()) {
             $link->update(['status' => 'expired']);
             Log::warning('OnboardingService: Expired onboarding code', ['code' => $code]);
-            return false;
+            return ['success' => false, 'link' => null, 'group' => null, 'errorType' => 'expired'];
         }
 
         // Link Telegram account
@@ -130,29 +135,55 @@ class OnboardingService
             'linked_at' => now(),
         ]);
 
-        // Sync to Firestore: update user document with telegram_id
+        // Fetch user data from Firestore to get country/language
+        $userData = $this->fetchUserData($link->user_id, $link->role);
+        $userCountry = $userData['country'] ?? '';
+        $userLanguage = $userData['language'] ?? 'fr';
+
+        // Find the right Telegram group
+        $group = $this->telegramGroupService->findGroupForUser(
+            $link->role,
+            $userLanguage,
+            $userCountry,
+        );
+
+        // Sync to Firestore: update user document with telegram_id + group info
         try {
-            $this->firestoreService->setDocument('users', $link->user_id, [
+            $firestoreData = [
                 'telegram_id' => $telegramId,
                 'telegram_username' => $telegramUsername,
                 'telegramLinked' => true,
                 'telegramLinkedAt' => now()->toIso8601String(),
-            ], merge: true);
+            ];
+
+            if ($group) {
+                $firestoreData['telegramGroupId'] = $group->slug;
+                $firestoreData['telegramGroupName'] = $group->name;
+            }
+
+            // Write to users collection
+            $this->firestoreService->setDocument('users', $link->user_id, $firestoreData, merge: true);
+
+            // Also write to role-specific collection
+            $roleCollection = $this->getRoleCollection($link->role);
+            if ($roleCollection && $roleCollection !== 'users') {
+                $this->firestoreService->setDocument($roleCollection, $link->user_id, $firestoreData, merge: true);
+            }
         } catch (\Throwable $e) {
             Log::error('OnboardingService: Failed to sync to Firestore', [
                 'user_id' => $link->user_id,
                 'error' => $e->getMessage(),
             ]);
-            // Don't fail the whole operation — local link is saved
         }
 
         Log::info('OnboardingService: Telegram linked successfully', [
             'user_id' => $link->user_id,
             'telegram_id' => $telegramId,
             'role' => $link->role,
+            'group' => $group?->slug,
         ]);
 
-        return true;
+        return ['success' => true, 'link' => $link, 'group' => $group, 'errorType' => null];
     }
 
     /**
@@ -180,20 +211,62 @@ class OnboardingService
     }
 
     /**
-     * Get the bot username from config or by calling getMe.
+     * Get the onboarding bot username from config.
      */
     protected function getBotUsername(): string
     {
-        $cached = cache()->remember('telegram_bot_username', 3600, function () {
-            try {
-                $botService = app(TelegramBotService::class);
-                $info = $botService->validateBot();
-                return $info['username'] ?? 'SOSExpatBot';
-            } catch (\Throwable) {
-                return 'SOSExpatBot';
-            }
-        });
+        return config('telegram.onboarding_bot_username', 'sos_expat_onboarding_users_bot');
+    }
 
-        return $cached;
+    /**
+     * Fetch user data from Firestore to determine country and language.
+     *
+     * @return array{country: string, language: string}
+     */
+    protected function fetchUserData(string $userId, string $role): array
+    {
+        try {
+            // Try role-specific collection first, then users
+            $collections = array_filter([
+                $this->getRoleCollection($role),
+                'users',
+            ]);
+
+            foreach (array_unique($collections) as $collection) {
+                $data = $this->firestoreService->getDocument($collection, $userId);
+                if ($data) {
+                    return [
+                        'country' => $data['country'] ?? $data['countryCode'] ?? '',
+                        'language' => $data['language'] ?? $data['preferredLanguage'] ?? 'fr',
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('OnboardingService: Failed to fetch user data', [
+                'user_id' => $userId,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return ['country' => '', 'language' => 'fr'];
+    }
+
+    /**
+     * Map role to Firestore collection name.
+     */
+    protected function getRoleCollection(string $role): ?string
+    {
+        return match ($role) {
+            'chatter'         => 'chatters',
+            'influencer'      => 'influencers',
+            'blogger'         => 'bloggers',
+            'group_admin'     => 'group_admins',
+            'captain'         => 'captains',
+            'captain_chatter' => 'captain_chatters',
+            'partner'         => 'partners',
+            'affiliate'       => 'users',
+            'client', 'lawyer', 'expat' => 'users',
+            default => null,
+        };
     }
 }

@@ -15,6 +15,7 @@ class VerifyFirebaseToken
     /**
      * Validate Firebase Auth ID token from the Authorization Bearer header.
      *
+     * Reads the `role` custom claim directly from the JWT token.
      * On success, merges `firebase_uid` and `is_admin` into the request.
      */
     public function handle(Request $request, Closure $next): Response
@@ -41,26 +42,13 @@ class VerifyFirebaseToken
                 ], Response::HTTP_UNAUTHORIZED);
             }
 
-            // Check admin role from Firestore
-            $isAdmin = false;
-            try {
-                $firestore = Firebase::firestore()->database();
-                $userDoc = $firestore->collection('users')->document($uid)->snapshot();
-
-                if ($userDoc->exists()) {
-                    $data = $userDoc->data();
-                    $isAdmin = ($data['role'] ?? '') === 'admin';
-                }
-            } catch (\Throwable $e) {
-                Log::warning('VerifyFirebaseToken: Could not check admin role in Firestore', [
-                    'uid' => $uid,
-                    'error' => $e->getMessage(),
-                ]);
-            }
+            // Read role from JWT custom claims (set by Firebase syncRoleClaims trigger)
+            $role    = $verifiedToken->claims()->get('role', '');
+            $isAdmin = $role === 'admin';
 
             $request->merge([
                 'firebase_uid' => $uid,
-                'is_admin' => $isAdmin,
+                'is_admin'     => $isAdmin,
             ]);
 
             return $next($request);

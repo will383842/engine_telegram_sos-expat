@@ -25,8 +25,8 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
 
-            # Rebuild and restart containers
-            docker compose build --no-cache app
+            # Rebuild and restart ALL containers (app, queue, scheduler share same Dockerfile)
+            docker compose build --no-cache app queue scheduler
             docker compose up -d --force-recreate app queue scheduler nginx
 
             # Clear Laravel caches

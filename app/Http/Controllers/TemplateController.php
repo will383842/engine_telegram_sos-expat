@@ -23,6 +23,7 @@ class TemplateController extends Controller
         'negative_review'    => ['CLIENT_NAME', 'PROVIDER_NAME', 'RATING', 'COMMENT_PREVIEW', 'DATE', 'TIME'],
         'security_alert'     => ['ALERT_TYPE_FR', 'USER_EMAIL', 'IP_ADDRESS', 'COUNTRY', 'DETAILS', 'DATE', 'TIME'],
         'withdrawal_request' => ['USER_NAME', 'USER_TYPE_FR', 'AMOUNT', 'PAYMENT_METHOD', 'DATE', 'TIME'],
+        'captain_application'=> ['CANDIDATE_NAME', 'WHATSAPP', 'COUNTRY', 'MOTIVATION_PREVIEW', 'HAS_CV', 'DATE', 'TIME'],
     ];
 
     /**

@@ -39,6 +39,9 @@ Route::middleware('firebase.webhook')->prefix('events')->group(function () {
 Route::post('/bot/webhook', [BotController::class, 'handleWebhook'])
     ->middleware('telegram.verify');
 
+// Onboarding bot webhook (separate bot for user registration)
+Route::post('/bot/onboarding-webhook', [BotController::class, 'handleOnboardingWebhook']);
+
 /* ==========================================================================
  * Onboarding (secured by Firebase Auth token)
  * ======================================================================== */
