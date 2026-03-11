@@ -19,6 +19,7 @@ class MessageQueue extends Model
         'idempotency_key',
         'error',
         'source',
+        'bot_slug',
         'next_retry_at',
         'claimed_at',
         'sent_at',

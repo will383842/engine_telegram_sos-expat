@@ -53,6 +53,7 @@ class ProcessQueueCommand extends Command
                 message: $message->message,
                 parseMode: $message->parse_mode ?? 'HTML',
                 messageQueueId: $message->id,
+                botSlug: $message->bot_slug ?? 'main',
             );
 
             $dispatched++;

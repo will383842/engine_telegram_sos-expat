@@ -7,7 +7,7 @@ namespace App\Data;
 class DefaultTemplates
 {
     /**
-     * All 10 event types.
+     * All 12 event types.
      */
     public const EVENTS = [
         'new_registration',
@@ -20,6 +20,8 @@ class DefaultTemplates
         'security_alert',
         'withdrawal_request',
         'captain_application',
+        'user_feedback',
+        'partner_application',
     ];
 
     /**
@@ -177,6 +179,26 @@ class DefaultTemplates
                 📄 CV: {{HAS_CV}}
                 📅 {{DATE}} a {{TIME}}
                 TPL,
+
+            'user_feedback' => <<<'TPL'
+                💬 Nouveau feedback [{{FEEDBACK_TYPE}}]
+
+                👤 De: {{USER_EMAIL}}
+                📄 Page: {{PAGE}}
+                📋 {{DESCRIPTION}}
+                📅 {{DATE}} a {{TIME}}
+                TPL,
+
+            'partner_application' => <<<'TPL'
+                🤝 Candidature partenaire
+
+                👤 {{PARTNER_NAME}}
+                📧 {{EMAIL}}
+                🌐 Site: {{WEBSITE}}
+                🌍 {{COUNTRY}}
+                💬 {{MESSAGE_PREVIEW}}
+                📅 {{DATE}} a {{TIME}}
+                TPL,
         ];
     }
 
@@ -288,6 +310,26 @@ class DefaultTemplates
                 🌍 {{COUNTRY}}
                 💬 {{MOTIVATION_PREVIEW}}
                 📄 CV: {{HAS_CV}}
+                📅 {{DATE}} at {{TIME}}
+                TPL,
+
+            'user_feedback' => <<<'TPL'
+                💬 New Feedback [{{FEEDBACK_TYPE}}]
+
+                👤 From: {{USER_EMAIL}}
+                📄 Page: {{PAGE}}
+                📋 {{DESCRIPTION}}
+                📅 {{DATE}} at {{TIME}}
+                TPL,
+
+            'partner_application' => <<<'TPL'
+                🤝 Partner Application
+
+                👤 {{PARTNER_NAME}}
+                📧 {{EMAIL}}
+                🌐 Website: {{WEBSITE}}
+                🌍 {{COUNTRY}}
+                💬 {{MESSAGE_PREVIEW}}
                 📅 {{DATE}} at {{TIME}}
                 TPL,
         ];

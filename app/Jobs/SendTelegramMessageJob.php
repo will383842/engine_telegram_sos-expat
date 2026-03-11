@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Models\MessageQueue;
+use App\Models\TelegramBot;
+use App\Services\TelegramBotService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -42,6 +44,7 @@ class SendTelegramMessageJob implements ShouldQueue
         public readonly string $parseMode = 'HTML',
         public readonly ?array $replyMarkup = null,
         public readonly ?int $messageQueueId = null,
+        public readonly string $botSlug = 'main',
     ) {
         $this->onQueue('telegram-messages');
     }
@@ -49,8 +52,11 @@ class SendTelegramMessageJob implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(Nutgram $bot): void
+    public function handle(): void
     {
+        // Resolve the correct bot instance based on slug
+        $bot = $this->resolveBotInstance();
+
         $parseModeEnum = match (strtoupper($this->parseMode)) {
             'MARKDOWN', 'MARKDOWNV2' => ParseMode::MARKDOWN_V2,
             default => ParseMode::HTML,
@@ -71,8 +77,26 @@ class SendTelegramMessageJob implements ShouldQueue
 
         Log::info('SendTelegramMessageJob: message sent', [
             'chat_id' => $this->chatId,
+            'bot_slug' => $this->botSlug,
             'message_queue_id' => $this->messageQueueId,
         ]);
+    }
+
+    /**
+     * Resolve the Nutgram bot instance for the given slug.
+     */
+    protected function resolveBotInstance(): Nutgram
+    {
+        // Try to find bot in telegram_bots table
+        $telegramBot = TelegramBot::bySlug($this->botSlug);
+
+        if ($telegramBot) {
+            return TelegramBotService::forToken($telegramBot->token);
+        }
+
+        // Fallback to main bot from config
+        Log::warning('SendTelegramMessageJob: Bot slug not found, using main config', ['bot_slug' => $this->botSlug]);
+        return new Nutgram(config('telegram.bot_token'));
     }
 
     /**
@@ -82,6 +106,7 @@ class SendTelegramMessageJob implements ShouldQueue
     {
         Log::error('SendTelegramMessageJob: failed', [
             'chat_id' => $this->chatId,
+            'bot_slug' => $this->botSlug,
             'message_queue_id' => $this->messageQueueId,
             'error' => $exception->getMessage(),
             'attempt' => $this->attempts(),

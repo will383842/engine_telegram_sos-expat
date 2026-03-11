@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Models\AdminConfig;
 use App\Models\NotificationLog;
 use App\Models\NotificationTemplate;
+use App\Models\TelegramBot;
 use Illuminate\Support\Facades\Log;
 
 class NotificationService
@@ -19,8 +20,8 @@ class NotificationService
     /**
      * Send a notification for a given event type.
      *
-     * Reads AdminConfig to check if the event is enabled, fetches the best template,
-     * renders it with variables, and enqueues the message.
+     * Iterates over ALL active bots that have this event enabled,
+     * fetches the best template, renders it, and enqueues the message for each bot.
      *
      * @param string $eventType One of the configured event types
      * @param array<string, mixed> $variables Template variables
@@ -29,66 +30,58 @@ class NotificationService
     public function sendNotification(string $eventType, array $variables, ?array $filters = null): bool
     {
         try {
-            // Get admin config
-            $adminConfig = AdminConfig::first();
-
-            if (!$adminConfig) {
-                Log::warning('NotificationService: No admin config found');
-                $this->logNotification($eventType, '', null, 'filtered', 'No admin config', $variables, $filters);
+            // Apply filters before iterating bots
+            if ($filters && !$this->passesFilters($variables, $filters)) {
+                $this->logNotification($eventType, '', null, 'filtered', 'Did not pass filters', $variables, $filters);
                 return false;
             }
 
-            // Check if event is enabled
-            $notifications = $adminConfig->notifications ?? [];
-            if (is_string($notifications)) {
-                $notifications = json_decode($notifications, true) ?? [];
+            // Get all active bots that have this event enabled
+            $bots = TelegramBot::forEvent($eventType);
+
+            // Fallback: if no bots configured yet, use legacy AdminConfig
+            if ($bots->isEmpty()) {
+                return $this->sendViaLegacyConfig($eventType, $variables, $filters);
             }
 
-            if (!($notifications[$eventType] ?? false)) {
-                Log::info('NotificationService: Event type disabled', ['event_type' => $eventType]);
-                $this->logNotification($eventType, $adminConfig->recipient_chat_id ?? '', null, 'filtered', 'Event disabled', $variables, $filters);
-                return false;
-            }
+            $sent = false;
 
-            $chatId = $adminConfig->recipient_chat_id;
+            foreach ($bots as $bot) {
+                /** @var TelegramBot $bot */
+                $chatId = $bot->recipient_chat_id;
 
-            if (empty($chatId)) {
-                Log::warning('NotificationService: No recipient chat_id configured');
-                $this->logNotification($eventType, '', null, 'filtered', 'No chat_id configured', $variables, $filters);
-                return false;
-            }
-
-            // Apply filters
-            if ($filters) {
-                if (!$this->passesFilters($variables, $filters)) {
-                    $this->logNotification($eventType, $chatId, null, 'filtered', 'Did not pass filters', $variables, $filters);
-                    return false;
+                if (empty($chatId)) {
+                    Log::warning('NotificationService: No recipient chat_id for bot', ['bot_slug' => $bot->slug]);
+                    $this->logNotification($eventType, '', null, 'filtered', "No chat_id for bot {$bot->slug}", $variables, $filters, $bot->slug);
+                    continue;
                 }
+
+                // Get best template (French first, then English fallback)
+                $template = NotificationTemplate::getBest($eventType, 'fr');
+
+                if (!$template) {
+                    Log::warning('NotificationService: No template found', ['event_type' => $eventType, 'bot_slug' => $bot->slug]);
+                    $this->logNotification($eventType, $chatId, null, 'failed', 'No template found', $variables, $filters, $bot->slug);
+                    continue;
+                }
+
+                // Render template
+                $message = $this->renderer->render($template->template, $variables);
+
+                // Enqueue message with bot_slug
+                $this->messageQueue->enqueue(
+                    chatId: $chatId,
+                    message: $message,
+                    source: $eventType,
+                    parseMode: 'HTML',
+                    botSlug: $bot->slug,
+                );
+
+                $this->logNotification($eventType, $chatId, $message, 'sent', null, $variables, $filters, $bot->slug);
+                $sent = true;
             }
 
-            // Get best template (French first, then English fallback)
-            $template = NotificationTemplate::getBest($eventType, 'fr');
-
-            if (!$template) {
-                Log::warning('NotificationService: No template found', ['event_type' => $eventType]);
-                $this->logNotification($eventType, $chatId, null, 'failed', 'No template found', $variables, $filters);
-                return false;
-            }
-
-            // Render template
-            $message = $this->renderer->render($template->template, $variables);
-
-            // Enqueue message
-            $this->messageQueue->enqueue(
-                chatId: $chatId,
-                message: $message,
-                source: $eventType,
-            );
-
-            // Log success
-            $this->logNotification($eventType, $chatId, $message, 'sent', null, $variables, $filters);
-
-            return true;
+            return $sent;
         } catch (\Throwable $e) {
             Log::error('NotificationService: Failed to send notification', [
                 'event_type' => $eventType,
@@ -99,6 +92,58 @@ class NotificationService
 
             return false;
         }
+    }
+
+    /**
+     * Legacy fallback: use AdminConfig (singleton) when no telegram_bots are configured.
+     * This ensures backward compatibility during migration.
+     */
+    protected function sendViaLegacyConfig(string $eventType, array $variables, ?array $filters): bool
+    {
+        $adminConfig = AdminConfig::first();
+
+        if (!$adminConfig) {
+            Log::warning('NotificationService: No admin config found (legacy fallback)');
+            $this->logNotification($eventType, '', null, 'filtered', 'No admin config', $variables, $filters);
+            return false;
+        }
+
+        $notifications = $adminConfig->notifications ?? [];
+        if (is_string($notifications)) {
+            $notifications = json_decode($notifications, true) ?? [];
+        }
+
+        if (!($notifications[$eventType] ?? false)) {
+            $this->logNotification($eventType, $adminConfig->recipient_chat_id ?? '', null, 'filtered', 'Event disabled (legacy)', $variables, $filters);
+            return false;
+        }
+
+        $chatId = $adminConfig->recipient_chat_id;
+
+        if (empty($chatId)) {
+            $this->logNotification($eventType, '', null, 'filtered', 'No chat_id configured (legacy)', $variables, $filters);
+            return false;
+        }
+
+        $template = NotificationTemplate::getBest($eventType, 'fr');
+
+        if (!$template) {
+            $this->logNotification($eventType, $chatId, null, 'failed', 'No template found', $variables, $filters);
+            return false;
+        }
+
+        $message = $this->renderer->render($template->template, $variables);
+
+        $this->messageQueue->enqueue(
+            chatId: $chatId,
+            message: $message,
+            source: $eventType,
+            botSlug: 'main',
+        );
+
+        $this->logNotification($eventType, $chatId, $message, 'sent', null, $variables, $filters, 'main');
+
+        return true;
     }
 
     /**
@@ -141,6 +186,7 @@ class NotificationService
         ?string $error,
         ?array $variables,
         ?array $filters,
+        ?string $botSlug = null,
     ): void {
         try {
             NotificationLog::create([
@@ -151,6 +197,7 @@ class NotificationService
                 'error' => $error,
                 'variables' => $variables,
                 'filters' => $filters,
+                'bot_slug' => $botSlug ?? 'main',
             ]);
         } catch (\Throwable $e) {
             Log::warning('NotificationService: Failed to write log', ['error' => $e->getMessage()]);

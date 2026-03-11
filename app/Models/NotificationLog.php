@@ -15,6 +15,7 @@ class NotificationLog extends Model
         'error',
         'variables',
         'filters',
+        'bot_slug',
     ];
 
     protected $casts = [

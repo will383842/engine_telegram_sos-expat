@@ -38,7 +38,7 @@ return [
     // Daily report timezone
     'timezone' => 'Europe/Paris',
 
-    // Notification event types
+    // Notification event types (12 total)
     'events' => [
         'new_registration',
         'call_completed',
@@ -50,6 +50,8 @@ return [
         'security_alert',
         'withdrawal_request',
         'captain_application',
+        'user_feedback',
+        'partner_application',
     ],
 
     // Supported languages

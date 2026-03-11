@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\AdminConfig;
+use App\Models\TelegramBot;
 use App\Services\MessageQueueService;
 use App\Services\NotificationService;
 use Carbon\Carbon;
@@ -255,6 +256,62 @@ class EventController extends Controller
     }
 
     /**
+     * A user submitted feedback (bug report, suggestion, UX friction).
+     * Event type: user_feedback
+     */
+    public function userFeedback(Request $request): JsonResponse
+    {
+        $data = $request->input('payload', $request->input('data', $request->all()));
+        $now = Carbon::now('Europe/Paris');
+
+        $typeLabel = match ($data['type'] ?? 'other') {
+            'bug' => 'Bug',
+            'ux_friction' => 'UX',
+            'suggestion' => 'Suggestion',
+            default => 'Autre',
+        };
+
+        $variables = [
+            'FEEDBACK_TYPE'    => $typeLabel,
+            'USER_EMAIL'       => $data['email'] ?? 'N/A',
+            'PAGE'             => $data['pageName'] ?? $data['pageUrl'] ?? 'N/A',
+            'DESCRIPTION'      => mb_substr($data['description'] ?? '', 0, 200),
+            'DATE'             => $now->format('d/m/Y'),
+            'TIME'             => $now->format('H:i'),
+        ];
+
+        $this->notificationService->sendNotification('user_feedback', $variables);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * A partner application was submitted.
+     * Event type: partner_application
+     */
+    public function partnerApplication(Request $request): JsonResponse
+    {
+        $data = $request->input('payload', $request->input('data', $request->all()));
+        $now = Carbon::now('Europe/Paris');
+
+        $name = trim(($data['firstName'] ?? '') . ' ' . ($data['lastName'] ?? ''));
+
+        $variables = [
+            'PARTNER_NAME'     => !empty($name) ? $name : ($data['name'] ?? 'N/A'),
+            'EMAIL'            => $data['email'] ?? 'N/A',
+            'WEBSITE'          => $data['websiteName'] ?? $data['websiteUrl'] ?? 'N/A',
+            'COUNTRY'          => $data['country'] ?? 'N/A',
+            'MESSAGE_PREVIEW'  => mb_substr($data['message'] ?? '', 0, 200),
+            'DATE'             => $now->format('d/m/Y'),
+            'TIME'             => $now->format('H:i'),
+        ];
+
+        $this->notificationService->sendNotification('partner_application', $variables);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
      * A withdrawal status changed (approved, failed, etc.).
      * Sends an inline message directly (no template needed).
      */
@@ -282,14 +339,32 @@ class EventController extends Controller
             . "Montant: {$amount}$\n"
             . "📅 {$now->format('d/m/Y')} a {$now->format('H:i')}";
 
-        $chatId = AdminConfig::current()->recipient_chat_id ?? '';
+        // Send to all bots that have withdrawal_request enabled
+        $bots = TelegramBot::forEvent('withdrawal_request');
 
-        if (!empty($chatId)) {
-            $this->messageQueueService->enqueue(
-                chatId: $chatId,
-                message: $message,
-                source: 'withdrawal_status_changed',
-            );
+        if ($bots->isNotEmpty()) {
+            foreach ($bots as $bot) {
+                $chatId = $bot->recipient_chat_id ?? '';
+                if (!empty($chatId)) {
+                    $this->messageQueueService->enqueue(
+                        chatId: $chatId,
+                        message: $message,
+                        source: 'withdrawal_status_changed',
+                        botSlug: $bot->slug,
+                    );
+                }
+            }
+        } else {
+            // Legacy fallback
+            $chatId = AdminConfig::current()->recipient_chat_id ?? '';
+            if (!empty($chatId)) {
+                $this->messageQueueService->enqueue(
+                    chatId: $chatId,
+                    message: $message,
+                    source: 'withdrawal_status_changed',
+                    botSlug: 'main',
+                );
+            }
         }
 
         return response()->json(['success' => true]);

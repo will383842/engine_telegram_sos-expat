@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\NotificationTemplate;
 use App\Models\AdminConfig;
+use App\Models\TelegramBot;
 use Illuminate\Database\Seeder;
 
 class NotificationTemplateSeeder extends Seeder
@@ -11,7 +12,7 @@ class NotificationTemplateSeeder extends Seeder
     public function run(): void
     {
         $templates = [
-            // ==================== FRENCH (10) ====================
+            // ==================== FRENCH (12) ====================
             ['new_registration', 'fr', "🆕 *Nouvelle inscription*\n\n👤 Rôle: {{ROLE_FR}}\n📧 Email: {{EMAIL}}\n📱 Téléphone: {{PHONE}}\n🌍 Pays: {{COUNTRY}}\n📅 {{DATE}} à {{TIME}}"],
             ['call_completed', 'fr', "📞 *Appel terminé*\n\n👤 Client: {{CLIENT_NAME}}\n🎯 Prestataire: {{PROVIDER_NAME}} ({{PROVIDER_TYPE_FR}})\n⏱️ Durée: {{DURATION_MINUTES}} min\n📅 {{DATE}} à {{TIME}}"],
             ['payment_received', 'fr', "💰 *Paiement reçu*\n\n💵 CA Total: {{TOTAL_AMOUNT}}€\n🏢 Commission SOS Expat: {{COMMISSION_AMOUNT}}€\n📅 {{DATE}} à {{TIME}}"],
@@ -22,8 +23,10 @@ class NotificationTemplateSeeder extends Seeder
             ['security_alert', 'fr', "🔐 *Alerte sécurité*\n\n🚨 Type: {{ALERT_TYPE_FR}}\n👤 Compte: {{USER_EMAIL}}\n🌍 Localisation: {{COUNTRY}}\n🔗 IP: {{IP_ADDRESS}}\n\n📋 {{DETAILS}}\n\n📅 {{DATE}} à {{TIME}}"],
             ['withdrawal_request', 'fr', "💳 *Demande de retrait*\n\n👤 {{USER_NAME}} ({{USER_TYPE_FR}})\n💰 Montant: {{AMOUNT}} \$\n🏦 Via: {{PAYMENT_METHOD}}\n📋 Détails: {{PAYMENT_DETAILS}}\n🌍 Pays: {{COUNTRY}}\n\n📅 {{DATE}} à {{TIME}}\n\n🔗 [Console admin]({{ADMIN_URL}})"],
             ['captain_application', 'fr', "👑 *Candidature Captain Chatter*\n\n👤 {{CANDIDATE_NAME}}\n📱 WhatsApp: {{WHATSAPP}}\n🌍 Pays: {{COUNTRY}}\n📎 CV: {{HAS_CV}}\n\n💬 {{MOTIVATION_PREVIEW}}\n\n📅 {{DATE}} à {{TIME}}"],
+            ['user_feedback', 'fr', "💬 *Nouveau feedback [{{FEEDBACK_TYPE}}]*\n\n👤 De: {{USER_EMAIL}}\n📄 Page: {{PAGE}}\n\n📋 {{DESCRIPTION}}\n\n📅 {{DATE}} à {{TIME}}"],
+            ['partner_application', 'fr', "🤝 *Candidature partenaire*\n\n👤 {{PARTNER_NAME}}\n📧 {{EMAIL}}\n🌐 Site: {{WEBSITE}}\n🌍 Pays: {{COUNTRY}}\n\n💬 {{MESSAGE_PREVIEW}}\n\n📅 {{DATE}} à {{TIME}}"],
 
-            // ==================== ENGLISH (10) ====================
+            // ==================== ENGLISH (12) ====================
             ['new_registration', 'en', "🆕 *New Registration*\n\n👤 Role: {{ROLE_FR}}\n📧 Email: {{EMAIL}}\n📱 Phone: {{PHONE}}\n🌍 Country: {{COUNTRY}}\n📅 {{DATE}} at {{TIME}}"],
             ['call_completed', 'en', "📞 *Call Completed*\n\n👤 Client: {{CLIENT_NAME}}\n🎯 Provider: {{PROVIDER_NAME}} ({{PROVIDER_TYPE_FR}})\n⏱️ Duration: {{DURATION_MINUTES}} min\n📅 {{DATE}} at {{TIME}}"],
             ['payment_received', 'en', "💰 *Payment Received*\n\n💵 Total Revenue: {{TOTAL_AMOUNT}}€\n🏢 SOS Expat Commission: {{COMMISSION_AMOUNT}}€\n📅 {{DATE}} at {{TIME}}"],
@@ -34,8 +37,10 @@ class NotificationTemplateSeeder extends Seeder
             ['security_alert', 'en', "🔐 *Security Alert*\n\n🚨 Type: {{ALERT_TYPE_FR}}\n👤 Account: {{USER_EMAIL}}\n🌍 Location: {{COUNTRY}}\n🔗 IP: {{IP_ADDRESS}}\n\n📋 {{DETAILS}}\n\n📅 {{DATE}} at {{TIME}}"],
             ['withdrawal_request', 'en', "💳 *Withdrawal Request*\n\n👤 {{USER_NAME}} ({{USER_TYPE_FR}})\n💰 Amount: {{AMOUNT}} \$\n🏦 Via: {{PAYMENT_METHOD}}\n📋 Details: {{PAYMENT_DETAILS}}\n🌍 Country: {{COUNTRY}}\n\n📅 {{DATE}} at {{TIME}}\n\n🔗 [Admin console]({{ADMIN_URL}})"],
             ['captain_application', 'en', "👑 *Captain Chatter Application*\n\n👤 {{CANDIDATE_NAME}}\n📱 WhatsApp: {{WHATSAPP}}\n🌍 Country: {{COUNTRY}}\n📎 CV: {{HAS_CV}}\n\n💬 {{MOTIVATION_PREVIEW}}\n\n📅 {{DATE}} at {{TIME}}"],
+            ['user_feedback', 'en', "💬 *New Feedback [{{FEEDBACK_TYPE}}]*\n\n👤 From: {{USER_EMAIL}}\n📄 Page: {{PAGE}}\n\n📋 {{DESCRIPTION}}\n\n📅 {{DATE}} at {{TIME}}"],
+            ['partner_application', 'en', "🤝 *Partner Application*\n\n👤 {{PARTNER_NAME}}\n📧 {{EMAIL}}\n🌐 Website: {{WEBSITE}}\n🌍 Country: {{COUNTRY}}\n\n💬 {{MESSAGE_PREVIEW}}\n\n📅 {{DATE}} at {{TIME}}"],
 
-            // ==================== SPANISH (10) ====================
+            // ==================== SPANISH (12) ====================
             ['new_registration', 'es', "🆕 *Nueva inscripción*\n\n👤 Rol: {{ROLE_FR}}\n📧 {{EMAIL}}\n📱 {{PHONE}}\n🌍 {{COUNTRY}}\n📅 {{DATE}} a las {{TIME}}"],
             ['call_completed', 'es', "📞 *Llamada completada*\n\n👤 {{CLIENT_NAME}} → {{PROVIDER_NAME}} ({{PROVIDER_TYPE_FR}})\n⏱️ {{DURATION_MINUTES}} min\n📅 {{DATE}} a las {{TIME}}"],
             ['payment_received', 'es', "💰 *Pago recibido*\n\n💵 {{TOTAL_AMOUNT}}€ | Comisión: {{COMMISSION_AMOUNT}}€\n📅 {{DATE}} a las {{TIME}}"],
@@ -46,8 +51,10 @@ class NotificationTemplateSeeder extends Seeder
             ['security_alert', 'es', "🔐 *Alerta de seguridad*\n\n🚨 {{ALERT_TYPE_FR}}\n👤 {{USER_EMAIL}}\n🌍 {{COUNTRY}} | IP: {{IP_ADDRESS}}\n📋 {{DETAILS}}\n📅 {{DATE}} a las {{TIME}}"],
             ['withdrawal_request', 'es', "💳 *Solicitud de retiro*\n\n👤 {{USER_NAME}} ({{USER_TYPE_FR}})\n💰 {{AMOUNT}} \$ via {{PAYMENT_METHOD}}\n📅 {{DATE}} a las {{TIME}}"],
             ['captain_application', 'es', "👑 *Candidatura Captain*\n\n👤 {{CANDIDATE_NAME}}\n🌍 {{COUNTRY}} | CV: {{HAS_CV}}\n💬 {{MOTIVATION_PREVIEW}}\n📅 {{DATE}} a las {{TIME}}"],
+            ['user_feedback', 'es', "💬 *Nuevo feedback [{{FEEDBACK_TYPE}}]*\n\n👤 {{USER_EMAIL}}\n📄 {{PAGE}}\n📋 {{DESCRIPTION}}\n📅 {{DATE}} a las {{TIME}}"],
+            ['partner_application', 'es', "🤝 *Candidatura socio*\n\n👤 {{PARTNER_NAME}}\n📧 {{EMAIL}}\n🌐 {{WEBSITE}}\n🌍 {{COUNTRY}}\n💬 {{MESSAGE_PREVIEW}}\n📅 {{DATE}} a las {{TIME}}"],
 
-            // ==================== GERMAN (10) ====================
+            // ==================== GERMAN (12) ====================
             ['new_registration', 'de', "🆕 *Neue Anmeldung*\n\n👤 Rolle: {{ROLE_FR}}\n📧 {{EMAIL}}\n📱 {{PHONE}}\n🌍 {{COUNTRY}}\n📅 {{DATE}} um {{TIME}}"],
             ['call_completed', 'de', "📞 *Anruf beendet*\n\n👤 {{CLIENT_NAME}} → {{PROVIDER_NAME}} ({{PROVIDER_TYPE_FR}})\n⏱️ {{DURATION_MINUTES}} Min.\n📅 {{DATE}} um {{TIME}}"],
             ['payment_received', 'de', "💰 *Zahlung erhalten*\n\n💵 {{TOTAL_AMOUNT}}€ | Provision: {{COMMISSION_AMOUNT}}€\n📅 {{DATE}} um {{TIME}}"],
@@ -58,8 +65,10 @@ class NotificationTemplateSeeder extends Seeder
             ['security_alert', 'de', "🔐 *Sicherheitswarnung*\n\n🚨 {{ALERT_TYPE_FR}}\n👤 {{USER_EMAIL}}\n🌍 {{COUNTRY}} | IP: {{IP_ADDRESS}}\n📋 {{DETAILS}}\n📅 {{DATE}} um {{TIME}}"],
             ['withdrawal_request', 'de', "💳 *Auszahlungsantrag*\n\n👤 {{USER_NAME}} ({{USER_TYPE_FR}})\n💰 {{AMOUNT}} \$ via {{PAYMENT_METHOD}}\n📅 {{DATE}} um {{TIME}}"],
             ['captain_application', 'de', "👑 *Captain Bewerbung*\n\n👤 {{CANDIDATE_NAME}}\n🌍 {{COUNTRY}} | CV: {{HAS_CV}}\n💬 {{MOTIVATION_PREVIEW}}\n📅 {{DATE}} um {{TIME}}"],
+            ['user_feedback', 'de', "💬 *Neues Feedback [{{FEEDBACK_TYPE}}]*\n\n👤 {{USER_EMAIL}}\n📄 {{PAGE}}\n📋 {{DESCRIPTION}}\n📅 {{DATE}} um {{TIME}}"],
+            ['partner_application', 'de', "🤝 *Partnerbewerbung*\n\n👤 {{PARTNER_NAME}}\n📧 {{EMAIL}}\n🌐 {{WEBSITE}}\n🌍 {{COUNTRY}}\n💬 {{MESSAGE_PREVIEW}}\n📅 {{DATE}} um {{TIME}}"],
 
-            // ==================== PORTUGUESE (10) ====================
+            // ==================== PORTUGUESE (12) ====================
             ['new_registration', 'pt', "🆕 *Nova inscrição*\n\n👤 {{ROLE_FR}}\n📧 {{EMAIL}}\n📱 {{PHONE}}\n🌍 {{COUNTRY}}\n📅 {{DATE}} às {{TIME}}"],
             ['call_completed', 'pt', "📞 *Chamada concluída*\n\n👤 {{CLIENT_NAME}} → {{PROVIDER_NAME}} ({{PROVIDER_TYPE_FR}})\n⏱️ {{DURATION_MINUTES}} min\n📅 {{DATE}} às {{TIME}}"],
             ['payment_received', 'pt', "💰 *Pagamento recebido*\n\n💵 {{TOTAL_AMOUNT}}€ | Comissão: {{COMMISSION_AMOUNT}}€\n📅 {{DATE}} às {{TIME}}"],
@@ -70,8 +79,10 @@ class NotificationTemplateSeeder extends Seeder
             ['security_alert', 'pt', "🔐 *Alerta de segurança*\n\n🚨 {{ALERT_TYPE_FR}}\n👤 {{USER_EMAIL}}\n🌍 {{COUNTRY}} | IP: {{IP_ADDRESS}}\n📋 {{DETAILS}}\n📅 {{DATE}} às {{TIME}}"],
             ['withdrawal_request', 'pt', "💳 *Pedido de saque*\n\n👤 {{USER_NAME}} ({{USER_TYPE_FR}})\n💰 {{AMOUNT}} \$ via {{PAYMENT_METHOD}}\n📅 {{DATE}} às {{TIME}}"],
             ['captain_application', 'pt', "👑 *Candidatura Captain*\n\n👤 {{CANDIDATE_NAME}}\n🌍 {{COUNTRY}} | CV: {{HAS_CV}}\n💬 {{MOTIVATION_PREVIEW}}\n📅 {{DATE}} às {{TIME}}"],
+            ['user_feedback', 'pt', "💬 *Novo feedback [{{FEEDBACK_TYPE}}]*\n\n👤 {{USER_EMAIL}}\n📄 {{PAGE}}\n📋 {{DESCRIPTION}}\n📅 {{DATE}} às {{TIME}}"],
+            ['partner_application', 'pt', "🤝 *Candidatura parceiro*\n\n👤 {{PARTNER_NAME}}\n📧 {{EMAIL}}\n🌐 {{WEBSITE}}\n🌍 {{COUNTRY}}\n💬 {{MESSAGE_PREVIEW}}\n📅 {{DATE}} às {{TIME}}"],
 
-            // ==================== RUSSIAN (10) ====================
+            // ==================== RUSSIAN (12) ====================
             ['new_registration', 'ru', "🆕 *Новая регистрация*\n\n👤 {{ROLE_FR}}\n📧 {{EMAIL}}\n📱 {{PHONE}}\n🌍 {{COUNTRY}}\n📅 {{DATE}} в {{TIME}}"],
             ['call_completed', 'ru', "📞 *Звонок завершён*\n\n👤 {{CLIENT_NAME}} → {{PROVIDER_NAME}} ({{PROVIDER_TYPE_FR}})\n⏱️ {{DURATION_MINUTES}} мин\n📅 {{DATE}} в {{TIME}}"],
             ['payment_received', 'ru', "💰 *Платёж получен*\n\n💵 {{TOTAL_AMOUNT}}€ | Комиссия: {{COMMISSION_AMOUNT}}€\n📅 {{DATE}} в {{TIME}}"],
@@ -82,8 +93,10 @@ class NotificationTemplateSeeder extends Seeder
             ['security_alert', 'ru', "🔐 *Безопасность*\n\n🚨 {{ALERT_TYPE_FR}}\n👤 {{USER_EMAIL}}\n🌍 {{COUNTRY}} | IP: {{IP_ADDRESS}}\n📋 {{DETAILS}}\n📅 {{DATE}} в {{TIME}}"],
             ['withdrawal_request', 'ru', "💳 *Запрос на вывод*\n\n👤 {{USER_NAME}} ({{USER_TYPE_FR}})\n💰 {{AMOUNT}} \$ via {{PAYMENT_METHOD}}\n📅 {{DATE}} в {{TIME}}"],
             ['captain_application', 'ru', "👑 *Заявка Captain*\n\n👤 {{CANDIDATE_NAME}}\n🌍 {{COUNTRY}} | CV: {{HAS_CV}}\n💬 {{MOTIVATION_PREVIEW}}\n📅 {{DATE}} в {{TIME}}"],
+            ['user_feedback', 'ru', "💬 *Новый отзыв [{{FEEDBACK_TYPE}}]*\n\n👤 {{USER_EMAIL}}\n📄 {{PAGE}}\n📋 {{DESCRIPTION}}\n📅 {{DATE}} в {{TIME}}"],
+            ['partner_application', 'ru', "🤝 *Заявка партнёра*\n\n👤 {{PARTNER_NAME}}\n📧 {{EMAIL}}\n🌐 {{WEBSITE}}\n🌍 {{COUNTRY}}\n💬 {{MESSAGE_PREVIEW}}\n📅 {{DATE}} в {{TIME}}"],
 
-            // ==================== CHINESE (10) ====================
+            // ==================== CHINESE (12) ====================
             ['new_registration', 'zh', "🆕 *新用户注册*\n\n👤 {{ROLE_FR}}\n📧 {{EMAIL}}\n📱 {{PHONE}}\n🌍 {{COUNTRY}}\n📅 {{DATE}} {{TIME}}"],
             ['call_completed', 'zh', "📞 *通话结束*\n\n👤 {{CLIENT_NAME}} → {{PROVIDER_NAME}} ({{PROVIDER_TYPE_FR}})\n⏱️ {{DURATION_MINUTES}} 分钟\n📅 {{DATE}} {{TIME}}"],
             ['payment_received', 'zh', "💰 *收到付款*\n\n💵 {{TOTAL_AMOUNT}}€ | 佣金: {{COMMISSION_AMOUNT}}€\n📅 {{DATE}} {{TIME}}"],
@@ -94,8 +107,10 @@ class NotificationTemplateSeeder extends Seeder
             ['security_alert', 'zh', "🔐 *安全警报*\n\n🚨 {{ALERT_TYPE_FR}}\n👤 {{USER_EMAIL}}\n🌍 {{COUNTRY}} | IP: {{IP_ADDRESS}}\n📋 {{DETAILS}}\n📅 {{DATE}} {{TIME}}"],
             ['withdrawal_request', 'zh', "💳 *提现请求*\n\n👤 {{USER_NAME}} ({{USER_TYPE_FR}})\n💰 {{AMOUNT}} \$ via {{PAYMENT_METHOD}}\n📅 {{DATE}} {{TIME}}"],
             ['captain_application', 'zh', "👑 *Captain申请*\n\n👤 {{CANDIDATE_NAME}}\n🌍 {{COUNTRY}} | CV: {{HAS_CV}}\n💬 {{MOTIVATION_PREVIEW}}\n📅 {{DATE}} {{TIME}}"],
+            ['user_feedback', 'zh', "💬 *新反馈 [{{FEEDBACK_TYPE}}]*\n\n👤 {{USER_EMAIL}}\n📄 {{PAGE}}\n📋 {{DESCRIPTION}}\n📅 {{DATE}} {{TIME}}"],
+            ['partner_application', 'zh', "🤝 *合作伙伴申请*\n\n👤 {{PARTNER_NAME}}\n📧 {{EMAIL}}\n🌐 {{WEBSITE}}\n🌍 {{COUNTRY}}\n💬 {{MESSAGE_PREVIEW}}\n📅 {{DATE}} {{TIME}}"],
 
-            // ==================== HINDI (10) ====================
+            // ==================== HINDI (12) ====================
             ['new_registration', 'hi', "🆕 *नया पंजीकरण*\n\n👤 {{ROLE_FR}}\n📧 {{EMAIL}}\n📱 {{PHONE}}\n🌍 {{COUNTRY}}\n📅 {{DATE}} {{TIME}}"],
             ['call_completed', 'hi', "📞 *कॉल पूरी*\n\n👤 {{CLIENT_NAME}} → {{PROVIDER_NAME}} ({{PROVIDER_TYPE_FR}})\n⏱️ {{DURATION_MINUTES}} मिनट\n📅 {{DATE}} {{TIME}}"],
             ['payment_received', 'hi', "💰 *भुगतान प्राप्त*\n\n💵 {{TOTAL_AMOUNT}}€ | कमीशन: {{COMMISSION_AMOUNT}}€\n📅 {{DATE}} {{TIME}}"],
@@ -106,8 +121,10 @@ class NotificationTemplateSeeder extends Seeder
             ['security_alert', 'hi', "🔐 *सुरक्षा चेतावनी*\n\n🚨 {{ALERT_TYPE_FR}}\n👤 {{USER_EMAIL}}\n🌍 {{COUNTRY}} | IP: {{IP_ADDRESS}}\n📋 {{DETAILS}}\n📅 {{DATE}} {{TIME}}"],
             ['withdrawal_request', 'hi', "💳 *निकासी अनुरोध*\n\n👤 {{USER_NAME}} ({{USER_TYPE_FR}})\n💰 {{AMOUNT}} \$ via {{PAYMENT_METHOD}}\n📅 {{DATE}} {{TIME}}"],
             ['captain_application', 'hi', "👑 *Captain आवेदन*\n\n👤 {{CANDIDATE_NAME}}\n🌍 {{COUNTRY}} | CV: {{HAS_CV}}\n💬 {{MOTIVATION_PREVIEW}}\n📅 {{DATE}} {{TIME}}"],
+            ['user_feedback', 'hi', "💬 *नया फीडबैक [{{FEEDBACK_TYPE}}]*\n\n👤 {{USER_EMAIL}}\n📄 {{PAGE}}\n📋 {{DESCRIPTION}}\n📅 {{DATE}} {{TIME}}"],
+            ['partner_application', 'hi', "🤝 *साझेदार आवेदन*\n\n👤 {{PARTNER_NAME}}\n📧 {{EMAIL}}\n🌐 {{WEBSITE}}\n🌍 {{COUNTRY}}\n💬 {{MESSAGE_PREVIEW}}\n📅 {{DATE}} {{TIME}}"],
 
-            // ==================== ARABIC (10) ====================
+            // ==================== ARABIC (12) ====================
             ['new_registration', 'ar', "🆕 *تسجيل جديد*\n\n👤 {{ROLE_FR}}\n📧 {{EMAIL}}\n📱 {{PHONE}}\n🌍 {{COUNTRY}}\n📅 {{DATE}} {{TIME}}"],
             ['call_completed', 'ar', "📞 *مكالمة مكتملة*\n\n👤 {{CLIENT_NAME}} → {{PROVIDER_NAME}} ({{PROVIDER_TYPE_FR}})\n⏱️ {{DURATION_MINUTES}} دقيقة\n📅 {{DATE}} {{TIME}}"],
             ['payment_received', 'ar', "💰 *تم استلام الدفعة*\n\n💵 {{TOTAL_AMOUNT}}€ | عمولة: {{COMMISSION_AMOUNT}}€\n📅 {{DATE}} {{TIME}}"],
@@ -118,6 +135,8 @@ class NotificationTemplateSeeder extends Seeder
             ['security_alert', 'ar', "🔐 *تنبيه أمني*\n\n🚨 {{ALERT_TYPE_FR}}\n👤 {{USER_EMAIL}}\n🌍 {{COUNTRY}} | IP: {{IP_ADDRESS}}\n📋 {{DETAILS}}\n📅 {{DATE}} {{TIME}}"],
             ['withdrawal_request', 'ar', "💳 *طلب سحب*\n\n👤 {{USER_NAME}} ({{USER_TYPE_FR}})\n💰 {{AMOUNT}} \$ via {{PAYMENT_METHOD}}\n📅 {{DATE}} {{TIME}}"],
             ['captain_application', 'ar', "👑 *طلب Captain*\n\n👤 {{CANDIDATE_NAME}}\n🌍 {{COUNTRY}} | CV: {{HAS_CV}}\n💬 {{MOTIVATION_PREVIEW}}\n📅 {{DATE}} {{TIME}}"],
+            ['user_feedback', 'ar', "💬 *تعليق جديد [{{FEEDBACK_TYPE}}]*\n\n👤 {{USER_EMAIL}}\n📄 {{PAGE}}\n📋 {{DESCRIPTION}}\n📅 {{DATE}} {{TIME}}"],
+            ['partner_application', 'ar', "🤝 *طلب شراكة*\n\n👤 {{PARTNER_NAME}}\n📧 {{EMAIL}}\n🌐 {{WEBSITE}}\n🌍 {{COUNTRY}}\n💬 {{MESSAGE_PREVIEW}}\n📅 {{DATE}} {{TIME}}"],
         ];
 
         foreach ($templates as [$eventType, $language, $template]) {
@@ -127,29 +146,85 @@ class NotificationTemplateSeeder extends Seeder
             );
         }
 
-        $this->command->info('Seeded ' . count($templates) . ' notification templates (10 events x 9 languages)');
+        $this->command->info('Seeded ' . count($templates) . ' notification templates (12 events x 9 languages)');
 
-        // Seed AdminConfig with all events enabled
+        // Main bot events (business/operations — NOT inbox messages)
+        $mainBotEvents = [
+            'new_registration' => true,
+            'call_completed' => true,
+            'payment_received' => true,
+            'daily_report' => true,
+            'new_provider' => true,
+            'negative_review' => true,
+            'security_alert' => true,
+            // Inbox events DISABLED on main bot:
+            'new_contact_message' => false,
+            'user_feedback' => false,
+            'captain_application' => false,
+            'partner_application' => false,
+            'withdrawal_request' => false,
+        ];
+
+        // Inbox bot events (messages, feedbacks, candidatures — NOT withdrawals)
+        $inboxEvents = [
+            'new_contact_message' => true,
+            'user_feedback' => true,
+            'captain_application' => true,
+            'partner_application' => true,
+            'withdrawal_request' => false,
+        ];
+
+        // Withdrawals bot events (ONLY withdrawal requests)
+        $withdrawalEvents = [
+            'withdrawal_request' => true,
+        ];
+
+        // Seed AdminConfig (legacy, backward compat)
         AdminConfig::updateOrCreate(
             ['id' => 1],
             [
                 'recipient_chat_id' => '',
-                'notifications' => [
-                    'new_registration' => true,
-                    'call_completed' => true,
-                    'payment_received' => true,
-                    'daily_report' => true,
-                    'new_provider' => true,
-                    'new_contact_message' => true,
-                    'negative_review' => true,
-                    'security_alert' => true,
-                    'withdrawal_request' => true,
-                    'captain_application' => true,
-                ],
+                'notifications' => $mainBotEvents,
                 'updated_by' => 'seeder',
             ]
         );
 
-        $this->command->info('Seeded AdminConfig with all events enabled (recipient_chat_id still needs to be configured)');
+        $this->command->info('Seeded AdminConfig with main bot events');
+
+        // Seed Telegram Bots
+        TelegramBot::updateOrCreate(
+            ['slug' => 'main'],
+            [
+                'name' => 'SOS Expat Bot',
+                'token' => env('TELEGRAM_BOT_TOKEN', ''),
+                'recipient_chat_id' => '',
+                'notifications' => $mainBotEvents,
+                'is_active' => true,
+            ]
+        );
+
+        TelegramBot::updateOrCreate(
+            ['slug' => 'inbox'],
+            [
+                'name' => 'SOS Expat Inbox Bot',
+                'token' => env('TELEGRAM_INBOX_BOT_TOKEN', ''),
+                'recipient_chat_id' => '',
+                'notifications' => $inboxEvents,
+                'is_active' => true,
+            ]
+        );
+
+        TelegramBot::updateOrCreate(
+            ['slug' => 'withdrawals'],
+            [
+                'name' => 'SOS Expat Withdrawals Bot',
+                'token' => env('TELEGRAM_WITHDRAWALS_BOT_TOKEN', ''),
+                'recipient_chat_id' => '',
+                'notifications' => $withdrawalEvents,
+                'is_active' => true,
+            ]
+        );
+
+        $this->command->info('Seeded 3 Telegram bots (main + inbox + withdrawals)');
     }
 }

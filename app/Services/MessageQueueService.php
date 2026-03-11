@@ -20,10 +20,11 @@ class MessageQueueService
         string $message,
         string $source = 'notification',
         ?string $parseMode = 'HTML',
+        string $botSlug = 'main',
     ): void {
-        // Idempotency key: SHA-256 of chatId + message + current minute
+        // Idempotency key: SHA-256 of chatId + message + botSlug + current minute
         $minuteKey = now()->format('Y-m-d H:i');
-        $idempotencyKey = hash('sha256', $chatId . $message . $minuteKey);
+        $idempotencyKey = hash('sha256', $chatId . $message . $botSlug . $minuteKey);
 
         // Check for duplicate within the current minute
         $exists = MessageQueue::where('idempotency_key', $idempotencyKey)
@@ -34,6 +35,7 @@ class MessageQueueService
             Log::info('MessageQueueService: Duplicate message skipped', [
                 'chat_id' => $chatId,
                 'source' => $source,
+                'bot_slug' => $botSlug,
                 'idempotency_key' => $idempotencyKey,
             ]);
             return;
@@ -48,6 +50,7 @@ class MessageQueueService
             'max_retries' => config('telegram.queue.max_retries', 3),
             'idempotency_key' => $idempotencyKey,
             'source' => $source,
+            'bot_slug' => $botSlug,
         ]);
     }
 

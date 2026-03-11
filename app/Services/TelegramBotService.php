@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\TelegramBot;
 use SergiX44\Nutgram\Nutgram;
 use SergiX44\Nutgram\Telegram\Types\Keyboard\InlineKeyboardButton;
 use SergiX44\Nutgram\Telegram\Types\Keyboard\InlineKeyboardMarkup;
@@ -15,6 +16,9 @@ class TelegramBotService
     protected Nutgram $bot;
     protected FirestoreService $firestoreService;
 
+    /** @var array<string, Nutgram> Cache of bot instances by token */
+    protected static array $botInstances = [];
+
     public function __construct(FirestoreService $firestoreService)
     {
         $this->bot = new Nutgram(config('telegram.bot_token'));
@@ -22,9 +26,51 @@ class TelegramBotService
     }
 
     /**
+     * Get a Nutgram instance for a specific bot token.
+     * Uses caching to avoid creating multiple instances for the same token.
+     */
+    public static function forToken(string $token): Nutgram
+    {
+        if (!isset(self::$botInstances[$token])) {
+            self::$botInstances[$token] = new Nutgram($token);
+        }
+
+        return self::$botInstances[$token];
+    }
+
+    /**
+     * Get a Nutgram instance for a bot by its slug.
+     * Falls back to the main bot if slug not found.
+     */
+    public static function forSlug(string $slug): ?Nutgram
+    {
+        $telegramBot = TelegramBot::bySlug($slug);
+
+        if (!$telegramBot) {
+            Log::warning('TelegramBotService: Bot not found for slug', ['slug' => $slug]);
+            return null;
+        }
+
+        return self::forToken($telegramBot->token);
+    }
+
+    /**
      * Send a text message to a chat.
      */
     public function sendMessage(
+        string $chatId,
+        string $text,
+        string $parseMode = 'HTML',
+        ?array $replyMarkup = null,
+    ): bool {
+        return $this->sendMessageWithBot($this->bot, $chatId, $text, $parseMode, $replyMarkup);
+    }
+
+    /**
+     * Send a text message using a specific Nutgram instance.
+     */
+    public function sendMessageWithBot(
+        Nutgram $bot,
         string $chatId,
         string $text,
         string $parseMode = 'HTML',
@@ -43,9 +89,8 @@ class TelegramBotService
                 $params['reply_markup'] = $replyMarkup;
             }
 
-            $this->bot->sendMessage(...$params);
+            $bot->sendMessage(...$params);
 
-            // Track daily rate
             $this->trackSent();
 
             return true;
@@ -79,6 +124,29 @@ class TelegramBotService
             ];
         } catch (\Throwable $e) {
             Log::error('Telegram validateBot failed', ['error' => $e->getMessage()]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Validate a specific bot token.
+     *
+     * @return array{id: int, first_name: string, username: string, is_bot: bool}
+     */
+    public function validateBotToken(string $token): array
+    {
+        try {
+            $bot = self::forToken($token);
+            $me = $bot->getMe();
+
+            return [
+                'id' => $me->id,
+                'first_name' => $me->first_name ?? '',
+                'username' => $me->username ?? '',
+                'is_bot' => $me->is_bot ?? true,
+            ];
+        } catch (\Throwable $e) {
+            Log::error('Telegram validateBotToken failed', ['error' => $e->getMessage()]);
             throw $e;
         }
     }
