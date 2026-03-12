@@ -62,16 +62,31 @@ class MarketingResource extends Model
     ];
 
     public const CATEGORIES = [
-        'brand',
+        // Shared categories
+        'sos_expat',
+        'ulixai',
+        'founder',
+        // Affiliate categories
         'promotional',
         'social_media',
         'templates',
         'seo',
-        'group_posts',
-        'group_assets',
-        'partner_kit',
-        'press_kit',
         'recruitment',
+        // Group admin categories
+        'pinned_posts',
+        'cover_banners',
+        'post_images',
+        'story_images',
+        'badges',
+        'welcome_messages',
+        // Partner categories
+        'partner_kit',
+        // Press categories
+        'press_logos',
+        'press_releases',
+        'press_kit',
+        'press_photos',
+        'press_data',
     ];
 
     public const TYPES = [
@@ -117,8 +132,8 @@ class MarketingResource extends Model
             'name'           => $this->translate('name', $lang),
             'description'    => $this->translate('description', $lang),
             'content'        => $this->translate('content', $lang),
-            'file_path'      => $this->file_path,
-            'thumbnail_path' => $this->thumbnail_path,
+            'file_url'       => $this->file_path ? url("storage/{$this->file_path}") : null,
+            'thumbnail_url'  => $this->thumbnail_path ? url("storage/{$this->thumbnail_path}") : null,
             'file_format'    => $this->file_format,
             'file_size'      => $this->file_size,
             'placeholders'   => $this->placeholders,
