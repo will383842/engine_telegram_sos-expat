@@ -125,7 +125,7 @@ Route::middleware('firebase.admin')->prefix('admin')->group(function () {
  * Marketing resources for affiliates (secured by Firebase Auth + role)
  * ======================================================================== */
 
-Route::middleware('firebase.affiliate')->prefix('marketing')->group(function () {
+Route::middleware(['firebase.affiliate', 'throttle:120,1'])->prefix('marketing')->group(function () {
     Route::get('/resources', [AffiliateResourceController::class, 'index']);
     Route::post('/resources/{id}/download', [AffiliateResourceController::class, 'download']);
     Route::post('/resources/{id}/copy', [AffiliateResourceController::class, 'copy']);

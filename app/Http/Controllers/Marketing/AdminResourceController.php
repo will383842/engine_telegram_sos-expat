@@ -75,12 +75,14 @@ class AdminResourceController extends Controller
             'name.en'        => 'required|string|max:255',
             'description'    => 'nullable|array',
             'content'        => 'nullable|array',
-            'file_path'      => 'nullable|string|max:500',
-            'thumbnail_path' => 'nullable|string|max:500',
+            'file_path'      => 'nullable|string|max:500|regex:/^marketing\//',
+            'thumbnail_path' => 'nullable|string|max:500|regex:/^marketing\//',
             'file_format'    => 'nullable|string|max:20',
             'file_size'      => 'nullable|integer|min:0',
             'placeholders'   => 'nullable|array',
+            'placeholders.*' => 'string|max:100',
             'seo_keywords'   => 'nullable|array',
+            'seo_keywords.*' => 'string|max:100',
             'word_count'     => 'nullable|integer|min:0',
             'is_active'      => 'nullable|boolean',
             'sort_order'     => 'nullable|integer|min:0',
@@ -118,12 +120,14 @@ class AdminResourceController extends Controller
             'name'           => 'sometimes|array',
             'description'    => 'nullable|array',
             'content'        => 'nullable|array',
-            'file_path'      => 'nullable|string|max:500',
-            'thumbnail_path' => 'nullable|string|max:500',
+            'file_path'      => 'nullable|string|max:500|regex:/^marketing\//',
+            'thumbnail_path' => 'nullable|string|max:500|regex:/^marketing\//',
             'file_format'    => 'nullable|string|max:20',
             'file_size'      => 'nullable|integer|min:0',
             'placeholders'   => 'nullable|array',
+            'placeholders.*' => 'string|max:100',
             'seo_keywords'   => 'nullable|array',
+            'seo_keywords.*' => 'string|max:100',
             'word_count'     => 'nullable|integer|min:0',
             'is_active'      => 'nullable|boolean',
             'sort_order'     => 'nullable|integer|min:0',
@@ -144,12 +148,12 @@ class AdminResourceController extends Controller
     {
         $resource = MarketingResource::findOrFail($id);
 
-        // Delete associated file from storage if exists
-        if ($resource->file_path && Storage::exists($resource->file_path)) {
-            Storage::delete($resource->file_path);
+        // Delete associated file from public storage
+        if ($resource->file_path && Storage::disk('public')->exists($resource->file_path)) {
+            Storage::disk('public')->delete($resource->file_path);
         }
-        if ($resource->thumbnail_path && Storage::exists($resource->thumbnail_path)) {
-            Storage::delete($resource->thumbnail_path);
+        if ($resource->thumbnail_path && Storage::disk('public')->exists($resource->thumbnail_path)) {
+            Storage::disk('public')->delete($resource->thumbnail_path);
         }
 
         $resource->delete();
@@ -169,7 +173,7 @@ class AdminResourceController extends Controller
     public function upload(Request $request): JsonResponse
     {
         $request->validate([
-            'file' => 'required|file|max:51200', // 50MB max
+            'file' => 'required|file|max:51200|mimes:jpg,jpeg,png,webp,gif,svg,pdf,mp4,mov,avi,doc,docx,zip,psd,ai,eps', // 50MB max
         ]);
 
         $file = $request->file('file');

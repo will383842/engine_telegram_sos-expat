@@ -131,11 +131,14 @@ class AffiliateResourceController extends Controller
             ], 404);
         }
 
-        // Replace placeholders if provided in request
+        // Replace placeholders — only allow declared placeholders on the resource
         $replacements = $request->input('replacements', []);
-        if (is_array($replacements) && count($replacements) > 0) {
+        $allowedPlaceholders = $resource->placeholders ?? [];
+        if (is_array($replacements) && count($replacements) > 0 && count($allowedPlaceholders) > 0) {
             foreach ($replacements as $placeholder => $value) {
-                $content = str_replace($placeholder, (string) $value, $content);
+                if (in_array($placeholder, $allowedPlaceholders, true)) {
+                    $content = str_replace($placeholder, strip_tags((string) $value), $content);
+                }
             }
         }
 
