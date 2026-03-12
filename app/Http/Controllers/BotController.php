@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Services\FirebaseWithdrawalCallbackService;
 use App\Services\OnboardingService;
 use App\Services\TelegramBotService;
 use App\Services\TelegramGroupService;
@@ -20,6 +21,7 @@ class BotController extends Controller
         private readonly OnboardingService $onboardingService,
         private readonly TelegramGroupService $telegramGroupService,
         private readonly WithdrawalConfirmationService $withdrawalService,
+        private readonly FirebaseWithdrawalCallbackService $firebaseWithdrawalService,
     ) {}
 
     /**
@@ -54,12 +56,18 @@ class BotController extends Controller
 
     /**
      * Handle incoming webhook from the onboarding bot.
+     * Handles both messages (onboarding /start) and callback_query (withdrawal confirmations).
      */
     public function handleOnboardingWebhook(Request $request): JsonResponse
     {
         $update = $request->all();
 
         try {
+            // Handle callback queries (withdrawal confirmation buttons: wc_confirm_ / wc_cancel_)
+            if (isset($update['callback_query'])) {
+                return $this->handleOnboardingCallbackQuery($update['callback_query']);
+            }
+
             if (isset($update['message'])) {
                 return $this->handleOnboardingMessage($update['message']);
             }
@@ -73,6 +81,35 @@ class BotController extends Controller
 
             return response()->json(['ok' => true]);
         }
+    }
+
+    /* ------------------------------------------------------------------
+     * Onboarding bot callback query handling (withdrawal confirmations)
+     * ---------------------------------------------------------------- */
+
+    private function handleOnboardingCallbackQuery(array $callbackQuery): JsonResponse
+    {
+        $data = $callbackQuery['data'] ?? '';
+
+        // Handle Firebase withdrawal confirmation callbacks: wc_confirm_{code} / wc_cancel_{code}
+        if (str_starts_with($data, 'wc_confirm_') || str_starts_with($data, 'wc_cancel_')) {
+            $onboardingBot = $this->getOnboardingBotInstance();
+            if (!$onboardingBot) {
+                Log::error('Onboarding bot token not configured for withdrawal callback');
+                return response()->json(['ok' => true]);
+            }
+
+            $this->firebaseWithdrawalService->handleCallback($callbackQuery, $onboardingBot);
+            return response()->json(['ok' => true]);
+        }
+
+        // Unknown callback — acknowledge silently
+        $onboardingBot = $this->getOnboardingBotInstance();
+        if ($onboardingBot) {
+            $this->botService->answerCallbackQueryWithBot($onboardingBot, $callbackQuery['id'] ?? '');
+        }
+
+        return response()->json(['ok' => true]);
     }
 
     /* ------------------------------------------------------------------
@@ -260,7 +297,13 @@ class BotController extends Controller
             return response()->json(['ok' => true]);
         }
 
-        // Withdrawal confirmation: "withdraw_confirm:{code}"
+        // Firebase withdrawal confirmation callbacks: wc_confirm_{code} / wc_cancel_{code}
+        if (str_starts_with($data, 'wc_confirm_') || str_starts_with($data, 'wc_cancel_')) {
+            $this->firebaseWithdrawalService->handleCallback($callbackQuery, $this->botService->getBot());
+            return response()->json(['ok' => true]);
+        }
+
+        // Laravel withdrawal confirmation: "withdraw_confirm:{code}"
         if (str_starts_with($data, 'withdraw_confirm:')) {
             $code   = substr($data, 18);
             $result = $this->withdrawalService->confirm($code);

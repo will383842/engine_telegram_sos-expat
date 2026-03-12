@@ -134,6 +134,25 @@ class FirestoreService
     }
 
     /**
+     * Run a Firestore transaction.
+     *
+     * @param callable $callback Receives the Transaction object
+     * @return mixed The return value of the callback
+     */
+    public function runTransaction(callable $callback): mixed
+    {
+        return $this->db()->runTransaction($callback);
+    }
+
+    /**
+     * Get a document reference (for use in transactions).
+     */
+    public function getDocumentReference(string $collection, string $docId): \Google\Cloud\Firestore\DocumentReference
+    {
+        return $this->db()->collection($collection)->document($docId);
+    }
+
+    /**
      * Delete a document from a collection.
      */
     public function deleteDocument(string $collection, string $docId): void

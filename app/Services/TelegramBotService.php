@@ -305,6 +305,59 @@ class TelegramBotService
     }
 
     /**
+     * Answer a callback query using a specific bot instance.
+     */
+    public function answerCallbackQueryWithBot(
+        Nutgram $bot,
+        string $callbackQueryId,
+        ?string $text = null,
+        bool $showAlert = false,
+    ): void {
+        try {
+            $bot->answerCallbackQuery(
+                callback_query_id: $callbackQueryId,
+                text: $text,
+                show_alert: $showAlert,
+            );
+        } catch (\Throwable $e) {
+            Log::error('Telegram answerCallbackQueryWithBot failed', [
+                'callback_query_id' => $callbackQueryId,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Edit a message's text using a specific bot instance.
+     */
+    public function editMessageTextWithBot(
+        Nutgram $bot,
+        string $chatId,
+        int $messageId,
+        string $text,
+        string $parseMode = 'HTML',
+    ): bool {
+        try {
+            $bot->editMessageText(
+                text: $text,
+                chat_id: $chatId,
+                message_id: $messageId,
+                parse_mode: $parseMode,
+            );
+
+            return true;
+        } catch (\Throwable $e) {
+            Log::error('Telegram editMessageTextWithBot failed', [
+                'chat_id' => $chatId,
+                'message_id' => $messageId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
+    }
+
+    /**
      * Get user balance info from Firestore chatters collection by telegram_id.
      *
      * @return array{balance: int, tirelire: int, total_withdrawn: int}|null
