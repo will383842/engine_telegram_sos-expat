@@ -97,7 +97,7 @@ class OnboardingService
      * Links the Telegram account, syncs to Firestore, and returns context
      * for sending a welcome message with the appropriate group link.
      *
-     * @return array{success: bool, link: ?OnboardingLink, group: ?TelegramGroup, errorType: ?string}
+     * @return array{success: bool, link: ?OnboardingLink, group: ?TelegramGroup, errorType: ?string, language: string}
      */
     public function handleBotStart(
         int $telegramId,
@@ -115,14 +115,14 @@ class OnboardingService
                 'code' => $code,
                 'telegram_id' => $telegramId,
             ]);
-            return ['success' => false, 'link' => null, 'group' => null, 'errorType' => 'invalid'];
+            return ['success' => false, 'link' => null, 'group' => null, 'errorType' => 'invalid', 'language' => 'en'];
         }
 
         // Check expiry
         if ($link->expires_at && Carbon::parse($link->expires_at)->isPast()) {
             $link->update(['status' => 'expired']);
             Log::warning('OnboardingService: Expired onboarding code', ['code' => $code]);
-            return ['success' => false, 'link' => null, 'group' => null, 'errorType' => 'expired'];
+            return ['success' => false, 'link' => null, 'group' => null, 'errorType' => 'expired', 'language' => 'en'];
         }
 
         // Link Telegram account
@@ -183,7 +183,7 @@ class OnboardingService
             'group' => $group?->slug,
         ]);
 
-        return ['success' => true, 'link' => $link, 'group' => $group, 'errorType' => null];
+        return ['success' => true, 'link' => $link, 'group' => $group, 'errorType' => null, 'language' => $userLanguage];
     }
 
     /**

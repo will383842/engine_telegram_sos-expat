@@ -108,18 +108,20 @@ class BotController extends Controller
                     code: $code,
                 );
 
+                $lang = $result['language'] ?? 'en';
+
                 if ($result['success'] && $result['link']) {
-                    // Send welcome message with group link
                     $welcomeMessage = $this->telegramGroupService->buildWelcomeMessage(
-                        $from['first_name'] ?? 'Utilisateur',
+                        $from['first_name'] ?? 'User',
                         $result['link']->role,
                         $result['group'],
+                        $lang,
                     );
                     $this->botService->sendMessageWithBot($onboardingBot, $chatId, $welcomeMessage);
                 } else {
-                    // Send error message
                     $errorMessage = $this->telegramGroupService->buildErrorMessage(
-                        $result['errorType'] ?? 'invalid'
+                        $result['errorType'] ?? 'invalid',
+                        $lang,
                     );
                     $this->botService->sendMessageWithBot($onboardingBot, $chatId, $errorMessage);
                 }
@@ -128,23 +130,23 @@ class BotController extends Controller
             }
         }
 
-        // Plain /start without code
+        // Plain /start without code — detect language from Telegram client
         if ($text === '/start') {
+            $lang = $from['language_code'] ?? 'en';
             $this->botService->sendMessageWithBot(
                 $onboardingBot,
                 $chatId,
-                "👋 Bienvenue sur SOS-Expat !\n\n"
-                . "Pour lier votre compte Telegram, utilisez le lien depuis votre dashboard SOS-Expat.\n\n"
-                . "📱 https://sos-expat.com",
+                $this->telegramGroupService->buildStartMessage($lang),
             );
             return response()->json(['ok' => true]);
         }
 
         // Any other message
+        $lang = $from['language_code'] ?? 'en';
         $this->botService->sendMessageWithBot(
             $onboardingBot,
             $chatId,
-            "Pour lier votre compte, utilisez le lien depuis votre dashboard SOS-Expat.\n📱 https://sos-expat.com",
+            $this->telegramGroupService->buildUnknownMessage($lang),
         );
 
         return response()->json(['ok' => true]);
@@ -177,16 +179,20 @@ class BotController extends Controller
                     code: $code,
                 );
 
+                $lang = $result['language'] ?? 'en';
+
                 if ($result['success'] && $result['link']) {
                     $welcomeMessage = $this->telegramGroupService->buildWelcomeMessage(
-                        $from['first_name'] ?? 'Utilisateur',
+                        $from['first_name'] ?? 'User',
                         $result['link']->role,
                         $result['group'],
+                        $lang,
                     );
                     $this->botService->sendMessage($chatId, $welcomeMessage);
                 } else {
                     $errorMessage = $this->telegramGroupService->buildErrorMessage(
-                        $result['errorType'] ?? 'invalid'
+                        $result['errorType'] ?? 'invalid',
+                        $lang,
                     );
                     $this->botService->sendMessage($chatId, $errorMessage);
                 }
