@@ -100,6 +100,9 @@ class BotController extends Controller
             $code = trim(substr($text, 7));
 
             if ($code !== '') {
+                // Detect Telegram client language for fallback
+                $telegramLang = $from['language_code'] ?? 'en';
+
                 $result = $this->onboardingService->handleBotStart(
                     telegramId: (int) ($from['id'] ?? 0),
                     telegramUsername: $from['username'] ?? '',
@@ -108,7 +111,10 @@ class BotController extends Controller
                     code: $code,
                 );
 
-                $lang = $result['language'] ?? 'en';
+                // Use Firestore language on success, Telegram client language on error
+                $lang = $result['success']
+                    ? ($result['language'] ?? $telegramLang)
+                    : $telegramLang;
 
                 if ($result['success'] && $result['link']) {
                     $welcomeMessage = $this->telegramGroupService->buildWelcomeMessage(
@@ -166,6 +172,9 @@ class BotController extends Controller
             return response()->json(['ok' => true]);
         }
 
+        // Detect Telegram client language for all messages
+        $telegramLang = $from['language_code'] ?? 'en';
+
         // /start CODE — onboarding deep link (backward compat if someone uses main bot)
         if (str_starts_with($text, '/start ')) {
             $code = trim(substr($text, 7));
@@ -179,7 +188,10 @@ class BotController extends Controller
                     code: $code,
                 );
 
-                $lang = $result['language'] ?? 'en';
+                // Use Firestore language on success, Telegram client language on error
+                $lang = $result['success']
+                    ? ($result['language'] ?? $telegramLang)
+                    : $telegramLang;
 
                 if ($result['success'] && $result['link']) {
                     $welcomeMessage = $this->telegramGroupService->buildWelcomeMessage(
@@ -205,7 +217,7 @@ class BotController extends Controller
         if ($text === '/start') {
             $this->botService->sendMessage(
                 $chatId,
-                "Bienvenue sur le bot SOS-Expat !\n\nCommandes disponibles :\n/balance — Voir votre solde\n/stats — Voir vos statistiques\n/help — Aide",
+                $this->telegramGroupService->buildStartMessage($telegramLang),
             );
 
             return response()->json(['ok' => true]);
@@ -225,11 +237,8 @@ class BotController extends Controller
         if ($text === '/help') {
             $this->botService->sendMessage(
                 $chatId,
-                "Commandes disponibles :\n\n"
-                . "/balance — Afficher votre solde actuel\n"
-                . "/stats — Afficher vos statistiques\n"
-                . "/help — Afficher ce message d'aide\n\n"
-                . "Pour toute question, contactez le support sur https://sos-expat.com",
+                $this->telegramGroupService->t($telegramLang, 'commands')
+                    . "\n\nhttps://sos-expat.com",
             );
 
             return response()->json(['ok' => true]);
