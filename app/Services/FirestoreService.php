@@ -14,11 +14,27 @@ class FirestoreService
 
     /**
      * Get the Firestore client (lazy singleton).
+     * Uses REST transport instead of gRPC (no ext-grpc required).
      */
     protected function db(): FirestoreClient
     {
         if ($this->firestore === null) {
-            $this->firestore = Firebase::firestore()->database();
+            $credentials = config('firebase.projects.app.credentials');
+            $projectId = env('FIREBASE_PROJECT_ID', env('GOOGLE_CLOUD_PROJECT'));
+
+            $config = [
+                'transport' => 'rest',
+            ];
+
+            if ($credentials && file_exists($credentials)) {
+                $config['keyFilePath'] = $credentials;
+            }
+
+            if ($projectId) {
+                $config['projectId'] = $projectId;
+            }
+
+            $this->firestore = new FirestoreClient($config);
         }
 
         return $this->firestore;
