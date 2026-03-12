@@ -21,11 +21,6 @@ class CleanupExpiredJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     /**
-     * The queue this job should be dispatched to.
-     */
-    public string $queue = 'default';
-
-    /**
      * Execute the job.
      */
     public function handle(): array
