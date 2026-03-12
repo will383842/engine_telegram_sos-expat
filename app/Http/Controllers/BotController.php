@@ -8,7 +8,6 @@ use App\Services\FirebaseWithdrawalCallbackService;
 use App\Services\OnboardingService;
 use App\Services\TelegramBotService;
 use App\Services\TelegramGroupService;
-use App\Services\WithdrawalConfirmationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -20,7 +19,6 @@ class BotController extends Controller
         private readonly TelegramBotService $botService,
         private readonly OnboardingService $onboardingService,
         private readonly TelegramGroupService $telegramGroupService,
-        private readonly WithdrawalConfirmationService $withdrawalService,
         private readonly FirebaseWithdrawalCallbackService $firebaseWithdrawalService,
     ) {}
 
@@ -300,42 +298,6 @@ class BotController extends Controller
         // Firebase withdrawal confirmation callbacks: wc_confirm_{code} / wc_cancel_{code}
         if (str_starts_with($data, 'wc_confirm_') || str_starts_with($data, 'wc_cancel_')) {
             $this->firebaseWithdrawalService->handleCallback($callbackQuery, $this->botService->getBot());
-            return response()->json(['ok' => true]);
-        }
-
-        // Laravel withdrawal confirmation: "withdraw_confirm:{code}"
-        if (str_starts_with($data, 'withdraw_confirm:')) {
-            $code   = substr($data, 18);
-            $result = $this->withdrawalService->confirm($code);
-
-            $text = $result
-                ? "Retrait confirme ! Le traitement va commencer."
-                : "Impossible de confirmer ce retrait. Il a peut-etre deja ete traite ou a expire.";
-
-            $this->botService->answerCallbackQuery(
-                $callbackQuery['id'],
-                $result ? 'Confirme !' : 'Erreur',
-            );
-            $this->botService->sendMessage($chatId, $text);
-
-            return response()->json(['ok' => true]);
-        }
-
-        // Withdrawal cancellation: "withdraw_cancel:{withdrawalId}"
-        if (str_starts_with($data, 'withdraw_cancel:')) {
-            $code   = substr($data, 17);
-            $result = $this->withdrawalService->cancel($code);
-
-            $text = $result
-                ? "Retrait annule. Votre solde a ete restaure."
-                : "Impossible d'annuler ce retrait. Il a peut-etre deja ete traite ou a expire.";
-
-            $this->botService->answerCallbackQuery(
-                $callbackQuery['id'],
-                $result ? 'Annule !' : 'Erreur',
-            );
-            $this->botService->sendMessage($chatId, $text);
-
             return response()->json(['ok' => true]);
         }
 

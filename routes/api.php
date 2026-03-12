@@ -9,7 +9,6 @@ use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\QueueController;
 use App\Http\Controllers\SubscriberController;
 use App\Http\Controllers\TemplateController;
-use App\Http\Controllers\WithdrawalController;
 use Illuminate\Support\Facades\Route;
 
 /* ==========================================================================
@@ -51,15 +50,6 @@ Route::middleware('firebase.token')->prefix('onboarding')->group(function () {
     Route::post('/generate-link', [OnboardingController::class, 'generateLink']);
     Route::get('/check-status', [OnboardingController::class, 'checkStatus']);
     Route::post('/skip', [OnboardingController::class, 'skip']);
-});
-
-/* ==========================================================================
- * Withdrawal confirmation (secured by Firebase Auth token)
- * ======================================================================== */
-
-Route::middleware('firebase.token')->prefix('withdrawal')->group(function () {
-    Route::get('/confirmation-status/{id}', [WithdrawalController::class, 'getStatus']);
-    Route::post('/cancel/{id}', [WithdrawalController::class, 'cancel']);
 });
 
 /* ==========================================================================

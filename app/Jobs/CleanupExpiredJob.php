@@ -13,7 +13,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class CleanupExpiredJob implements ShouldQueue
@@ -27,7 +26,6 @@ class CleanupExpiredJob implements ShouldQueue
     {
         $counts = [
             'onboarding_links' => $this->cleanExpiredOnboardingLinks(),
-            'withdrawal_confirmations' => $this->cleanExpiredWithdrawalConfirmations(),
             'message_queue' => $this->cleanOldMessageQueueRecords(),
             'notification_logs' => $this->cleanOldNotificationLogs(),
             'stale_processing' => $this->resetStaleProcessingMessages(),
@@ -48,19 +46,6 @@ class CleanupExpiredJob implements ShouldQueue
 
         return OnboardingLink::where('status', 'pending')
             ->where('expires_at', '<', now())
-            ->update(['status' => 'expired']);
-    }
-
-    /**
-     * Clean expired withdrawal confirmations (> 15 min, status pending -> expired).
-     */
-    private function cleanExpiredWithdrawalConfirmations(): int
-    {
-        $expiryMinutes = config('telegram.withdrawal.expiry_minutes', 15);
-
-        return DB::table('withdrawal_confirmations')
-            ->where('status', 'pending')
-            ->where('created_at', '<', now()->subMinutes($expiryMinutes))
             ->update(['status' => 'expired']);
     }
 
