@@ -11,16 +11,21 @@ use Illuminate\Support\Facades\Log;
 /**
  * Telegram Group Service — find the right group for a user.
  *
- * 6-level resolution (same logic as WhatsApp groups):
- *   1. Continent + exact user language
- *   2. Continent + language inferred from country
- *   3. Language fallback group (user language)
- *   4. Language fallback group (country language)
- *   5. Default group for the role (first enabled)
- *   6. Any enabled group for the role
+ * Same resolution logic as WhatsApp groups (5 levels):
+ *
+ *   1. Continent + exact user language (chatters ONLY) — e.g. chatter FR in Cameroon → Chatter Afrique FR
+ *   2. User's selected language (language group) — e.g. influencer who chose FR → Influencer Français
+ *   3. Language inferred from country (language group) — e.g. blogger in Brazil → Blogger Português
+ *   4. Default group for the role (first enabled group)
+ *   5. Any enabled group for the role (last resort)
+ *
+ * Chatters have continent groups (7 continents × FR/EN), other roles have language-only groups (9 languages).
  */
 class TelegramGroupService
 {
+    /** Roles that use continent-based group resolution. */
+    private const CONTINENT_ROLES = ['chatter'];
+
     /**
      * Find the best Telegram group for a user based on role, language, and country.
      */
@@ -31,7 +36,7 @@ class TelegramGroupService
         $continent = GeoData::continentForCountry($upperCountry);
         $countryLang = GeoData::languageForCountry($upperCountry);
 
-        // Get all enabled groups for this role
+        // Get all enabled groups with links for this role
         $groups = TelegramGroup::where('role', $role)
             ->where('enabled', true)
             ->where('link', '!=', '')
@@ -41,29 +46,21 @@ class TelegramGroupService
             return null;
         }
 
-        // 1. Continent + exact user language
-        if ($continent) {
+        // ── Level 1: Continent + exact user language (chatters ONLY) ──
+        if (in_array($role, self::CONTINENT_ROLES, true) && $continent) {
             $match = $groups->first(fn (TelegramGroup $g) =>
                 $g->type === 'continent' && $g->continent_code === $continent && $g->language === $lang
             );
             if ($match) return $match;
         }
 
-        // 2. Continent + language inferred from country
-        if ($continent && $countryLang && $countryLang !== $lang) {
-            $match = $groups->first(fn (TelegramGroup $g) =>
-                $g->type === 'continent' && $g->continent_code === $continent && $g->language === $countryLang
-            );
-            if ($match) return $match;
-        }
-
-        // 3. Language fallback (user language)
+        // ── Level 2: User's selected language (language fallback group) ──
         $match = $groups->first(fn (TelegramGroup $g) =>
             $g->type === 'language' && $g->language === $lang
         );
         if ($match) return $match;
 
-        // 4. Language fallback (country language)
+        // ── Level 3: Language inferred from country ──
         if ($countryLang && $countryLang !== $lang) {
             $match = $groups->first(fn (TelegramGroup $g) =>
                 $g->type === 'language' && $g->language === $countryLang
@@ -71,7 +68,7 @@ class TelegramGroupService
             if ($match) return $match;
         }
 
-        // 5 & 6. Any enabled group for the role
+        // ── Level 4 & 5: Default / any enabled group for the role ──
         return $groups->first();
     }
 
