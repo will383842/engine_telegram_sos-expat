@@ -132,8 +132,8 @@ class MarketingResource extends Model
             'name'           => $this->translate('name', $lang),
             'description'    => $this->translate('description', $lang),
             'content'        => $this->translate('content', $lang),
-            'file_url'       => $this->file_path ? url("storage/{$this->file_path}") : null,
-            'thumbnail_url'  => $this->thumbnail_path ? url("storage/{$this->thumbnail_path}") : null,
+            'file_url'       => $this->resolveUrl($this->file_path),
+            'thumbnail_url'  => $this->resolveUrl($this->thumbnail_path),
             'file_format'    => $this->file_format,
             'file_size'      => $this->file_size,
             'placeholders'   => $this->placeholders,
@@ -174,6 +174,24 @@ class MarketingResource extends Model
             'created_at'     => $this->created_at?->toISOString(),
             'updated_at'     => $this->updated_at?->toISOString(),
         ];
+    }
+
+    /**
+     * Resolve a file path to a full URL.
+     * Handles both relative paths (Laravel storage) and absolute URLs (Firebase migration).
+     */
+    private function resolveUrl(?string $path): ?string
+    {
+        if (!$path) {
+            return null;
+        }
+
+        // Already a full URL (migrated from Firebase Storage)
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        return url("storage/{$path}");
     }
 
     /* ──────────────────────────────────────────
