@@ -27,16 +27,17 @@ class FirebaseWithdrawalCallbackService
      * Role → Firestore collection for balance refunds.
      */
     private const ROLE_COLLECTIONS = [
-        'chatter'    => 'chatters',
-        'influencer' => 'influencers',
-        'blogger'    => 'bloggers',
-        'groupAdmin' => 'group_admins',
-        'affiliate'  => 'users',
-        'client'     => 'users',
-        'lawyer'     => 'users',
-        'expat'      => 'users',
-        'captain'    => 'chatters',
-        'partner'    => 'partners',
+        'chatter'        => 'chatters',
+        'influencer'     => 'influencers',
+        'blogger'        => 'bloggers',
+        'groupAdmin'     => 'group_admins',
+        'affiliate'      => 'users',
+        'client'         => 'users',
+        'lawyer'         => 'users',
+        'expat'          => 'users',
+        'captainChatter' => 'captain_chatters',
+        'captain_chatter' => 'captain_chatters',
+        'partner'        => 'partners',
     ];
 
     public function __construct(
