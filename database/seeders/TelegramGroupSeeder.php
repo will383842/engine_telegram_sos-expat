@@ -11,8 +11,8 @@ use Illuminate\Database\Seeder;
  *
  * Creates 68 groups:
  * - Chatters: 7 continents × 2 languages (FR/EN) = 14 continent groups
- * - 6 other roles × 9 languages = 54 language groups
- *   (influencer, blogger, group_admin, client, lawyer, expat)
+ * - 7 other roles × 9 languages = 63 language groups
+ *   (influencer, blogger, group_admin, client, lawyer, expat, partner)
  *
  * All disabled by default, no links — admin activates and adds links.
  */
@@ -32,6 +32,7 @@ class TelegramGroupSeeder extends Seeder
         'client',
         'lawyer',
         'expat',
+        'partner',
     ];
 
     public function run(): void
@@ -87,6 +88,6 @@ class TelegramGroupSeeder extends Seeder
             }
         }
 
-        $this->command->info("Telegram groups seeded: {$created} groups (14 chatter continent + 54 language).");
+        $this->command->info("Telegram groups seeded: {$created} groups (14 chatter continent + 63 language).");
     }
 }
