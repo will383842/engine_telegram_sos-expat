@@ -60,14 +60,6 @@ class RateLimit extends Model
     }
 
     /**
-     * Increment the sent counter and optionally update peak.
-     */
-    public function increment(string $column = 'messages_sent', $amount = 1, array $extra = []): int
-    {
-        return parent::increment($column, $amount, $extra);
-    }
-
-    /**
      * Record a sent message and update peak if needed.
      */
     public function recordSent(int $currentPerSecond = 0): void
