@@ -45,11 +45,11 @@ class QueueController extends Controller
             ];
         }
 
-        // Hourly counts for today
+        // Hourly counts for today (EXTRACT works on both PostgreSQL and MySQL)
         $hourlyCounts = [];
         $todayMessages = MessageQueue::whereDate('created_at', Carbon::today())
-            ->selectRaw('HOUR(created_at) as hour, count(*) as count')
-            ->groupByRaw('HOUR(created_at)')
+            ->selectRaw('EXTRACT(HOUR FROM created_at)::int as hour, count(*) as count')
+            ->groupByRaw('EXTRACT(HOUR FROM created_at)')
             ->pluck('count', 'hour')
             ->toArray();
 
