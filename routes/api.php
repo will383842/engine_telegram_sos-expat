@@ -40,7 +40,8 @@ Route::post('/bot/webhook', [BotController::class, 'handleWebhook'])
     ->middleware('telegram.verify');
 
 // Onboarding bot webhook (separate bot for user registration)
-Route::post('/bot/onboarding-webhook', [BotController::class, 'handleOnboardingWebhook']);
+Route::post('/bot/onboarding-webhook', [BotController::class, 'handleOnboardingWebhook'])
+    ->middleware('telegram.verify');
 
 /* ==========================================================================
  * Onboarding (secured by Firebase Auth token)
