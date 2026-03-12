@@ -20,12 +20,14 @@ class OnboardingController extends Controller
     public function generateLink(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'userId' => 'required|string|max:128',
-            'role'   => 'required|string|in:chatter,influencer,blogger,group_admin,client,lawyer,expat,partner,captain,captain_chatter,affiliate',
+            'role' => 'required|string|in:chatter,influencer,blogger,group_admin,client,lawyer,expat,partner,captain,captain_chatter,affiliate',
         ]);
 
+        // Always use the authenticated Firebase UID, never trust client-sent userId
+        $userId = $request->input('firebase_uid');
+
         $result = $this->onboardingService->generateLink(
-            $validated['userId'],
+            $userId,
             $validated['role'],
         );
 
