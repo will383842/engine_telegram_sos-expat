@@ -7,6 +7,9 @@ use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\LogController;
+use App\Http\Controllers\Marketing\AdminResourceController;
+use App\Http\Controllers\Marketing\AffiliateResourceController;
+use App\Http\Controllers\Marketing\PressResourceController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\QueueController;
 use App\Http\Controllers\SubscriberController;
@@ -104,4 +107,36 @@ Route::middleware('firebase.admin')->prefix('admin')->group(function () {
     Route::put('/bots/{id}', [BotManagementController::class, 'update']);
     Route::post('/bots/{id}/validate', [BotManagementController::class, 'validateBot']);
     Route::post('/bots/{id}/test', [BotManagementController::class, 'test']);
+
+    // Marketing resources (admin CRUD)
+    Route::prefix('marketing')->group(function () {
+        Route::get('/resources', [AdminResourceController::class, 'index']);
+        Route::post('/resources', [AdminResourceController::class, 'store']);
+        Route::post('/resources/upload', [AdminResourceController::class, 'upload']);
+        Route::patch('/resources/bulk', [AdminResourceController::class, 'bulk']);
+        Route::patch('/resources/reorder', [AdminResourceController::class, 'reorder']);
+        Route::get('/resources/stats', [AdminResourceController::class, 'stats']);
+        Route::put('/resources/{id}', [AdminResourceController::class, 'update']);
+        Route::delete('/resources/{id}', [AdminResourceController::class, 'destroy']);
+    });
+});
+
+/* ==========================================================================
+ * Marketing resources for affiliates (secured by Firebase Auth + role)
+ * ======================================================================== */
+
+Route::middleware('firebase.affiliate')->prefix('marketing')->group(function () {
+    Route::get('/resources', [AffiliateResourceController::class, 'index']);
+    Route::post('/resources/{id}/download', [AffiliateResourceController::class, 'download']);
+    Route::post('/resources/{id}/copy', [AffiliateResourceController::class, 'copy']);
+    Route::get('/resources/{id}/processed', [AffiliateResourceController::class, 'processed']);
+});
+
+/* ==========================================================================
+ * Press resources (public — no auth)
+ * ======================================================================== */
+
+Route::middleware('throttle:60,1')->prefix('press')->group(function () {
+    Route::get('/resources', [PressResourceController::class, 'index']);
+    Route::get('/resources/{id}/download', [PressResourceController::class, 'download']);
 });

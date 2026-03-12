@@ -13,10 +13,11 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'firebase.webhook' => \App\Http\Middleware\VerifyFirebaseWebhook::class,
-            'firebase.token'   => \App\Http\Middleware\VerifyFirebaseToken::class,
-            'firebase.admin'   => \App\Http\Middleware\VerifyFirebaseAdmin::class,
-            'telegram.verify'  => \App\Http\Middleware\VerifyTelegramWebhook::class,
+            'firebase.webhook'   => \App\Http\Middleware\VerifyFirebaseWebhook::class,
+            'firebase.token'     => \App\Http\Middleware\VerifyFirebaseToken::class,
+            'firebase.admin'     => \App\Http\Middleware\VerifyFirebaseAdmin::class,
+            'firebase.affiliate' => \App\Http\Middleware\ResolveAffiliateRole::class,
+            'telegram.verify'    => \App\Http\Middleware\VerifyTelegramWebhook::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
