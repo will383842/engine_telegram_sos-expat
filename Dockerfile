@@ -20,8 +20,8 @@ RUN docker-php-ext-install \
     opcache \
     pcntl
 
-# Install Redis extension
-RUN pecl install redis && docker-php-ext-enable redis
+# Install Redis + gRPC extensions
+RUN pecl install redis grpc && docker-php-ext-enable redis grpc
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
