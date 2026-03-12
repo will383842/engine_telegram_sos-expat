@@ -2,8 +2,10 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BotController;
+use App\Http\Controllers\BotManagementController;
 use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\GroupController;
 use App\Http\Controllers\LogController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\QueueController;
@@ -85,4 +87,21 @@ Route::middleware('firebase.admin')->prefix('admin')->group(function () {
     Route::post('/campaigns', [CampaignController::class, 'create']);
     Route::get('/campaigns/{id}', [CampaignController::class, 'show']);
     Route::post('/campaigns/{id}/cancel', [CampaignController::class, 'cancel']);
+
+    // Telegram groups (static routes first to avoid {id} catch)
+    Route::get('/groups', [GroupController::class, 'index']);
+    Route::post('/groups', [GroupController::class, 'store']);
+    Route::post('/groups/seed', [GroupController::class, 'seed']);
+    Route::post('/groups/generate-continent', [GroupController::class, 'generateContinent']);
+    Route::post('/groups/generate-language', [GroupController::class, 'generateLanguage']);
+    Route::put('/groups/{id}', [GroupController::class, 'update']);
+    Route::delete('/groups/{id}', [GroupController::class, 'destroy']);
+    Route::post('/groups/{id}/managers', [GroupController::class, 'addManager']);
+    Route::delete('/groups/{id}/managers/{managerId}', [GroupController::class, 'removeManager']);
+
+    // Bot management
+    Route::get('/bots', [BotManagementController::class, 'index']);
+    Route::put('/bots/{id}', [BotManagementController::class, 'update']);
+    Route::post('/bots/{id}/validate', [BotManagementController::class, 'validateBot']);
+    Route::post('/bots/{id}/test', [BotManagementController::class, 'test']);
 });

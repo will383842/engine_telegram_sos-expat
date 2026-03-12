@@ -18,10 +18,12 @@ class TelegramGroup extends Model
         'type',
         'continent_code',
         'enabled',
+        'managers',
     ];
 
     protected $casts = [
         'enabled' => 'boolean',
+        'managers' => 'array',
     ];
 
     /* ----------------------------------------------------------------
