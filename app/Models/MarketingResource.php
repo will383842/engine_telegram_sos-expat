@@ -64,8 +64,6 @@ class MarketingResource extends Model
     public const CATEGORIES = [
         // Shared categories
         'sos_expat',
-        'ulixai',
-        'founder',
         // Affiliate categories
         'promotional',
         'social_media',
