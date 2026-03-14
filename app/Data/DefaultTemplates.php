@@ -22,6 +22,7 @@ class DefaultTemplates
         'captain_application',
         'user_feedback',
         'partner_application',
+        'trustpilot_weekly_report',
     ];
 
     /**
@@ -199,6 +200,20 @@ class DefaultTemplates
                 💬 {{MESSAGE_PREVIEW}}
                 📅 {{DATE}} a {{TIME}}
                 TPL,
+
+            'trustpilot_weekly_report' => <<<'TPL'
+                📊 Trustpilot — Rapport hebdo ({{PERIOD}})
+
+                ⭐ Note globale : {{TRUST_SCORE}}/5 {{SCORE_DELTA}}
+                📝 Total avis : {{TOTAL_REVIEWS}} {{NEW_REVIEWS_LABEL}}
+
+                📈 Distribution :
+                {{DISTRIBUTION}}
+
+                {{NEW_REVIEWS_SECTION}}
+
+                🔗 {{PROFILE_URL}}
+                TPL,
         ];
     }
 
@@ -331,6 +346,20 @@ class DefaultTemplates
                 🌍 {{COUNTRY}}
                 💬 {{MESSAGE_PREVIEW}}
                 📅 {{DATE}} at {{TIME}}
+                TPL,
+
+            'trustpilot_weekly_report' => <<<'TPL'
+                📊 Trustpilot — Weekly Report ({{PERIOD}})
+
+                ⭐ Overall rating: {{TRUST_SCORE}}/5 {{SCORE_DELTA}}
+                📝 Total reviews: {{TOTAL_REVIEWS}} {{NEW_REVIEWS_LABEL}}
+
+                📈 Distribution:
+                {{DISTRIBUTION}}
+
+                {{NEW_REVIEWS_SECTION}}
+
+                🔗 {{PROFILE_URL}}
                 TPL,
         ];
     }
