@@ -12,6 +12,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Global middleware — runs on ALL requests (including preflight OPTIONS)
+        $middleware->prepend(\App\Http\Middleware\CorsMiddleware::class);
+
         $middleware->alias([
             'firebase.webhook'   => \App\Http\Middleware\VerifyFirebaseWebhook::class,
             'firebase.token'     => \App\Http\Middleware\VerifyFirebaseToken::class,
