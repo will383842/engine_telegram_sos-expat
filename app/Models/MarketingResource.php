@@ -85,6 +85,10 @@ class MarketingResource extends Model
         'press_kit',
         'press_photos',
         'press_data',
+        'press_brand_guidelines',
+        'press_spokesperson',
+        'press_b_roll',
+        'press_fact_sheets',
     ];
 
     public const TYPES = [
@@ -178,7 +182,7 @@ class MarketingResource extends Model
      * Resolve a file path to a full URL.
      * Handles both relative paths (Laravel storage) and absolute URLs (Firebase migration).
      */
-    private function resolveUrl(?string $path): ?string
+    public function resolveUrl(?string $path): ?string
     {
         if (!$path) {
             return null;

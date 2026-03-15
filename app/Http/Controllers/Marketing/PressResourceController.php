@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 /**
  * Public controller (no authentication).
  * Serves resources tagged with "press" in target_roles.
- * Used by the future press landing page.
+ * Used by the press landing page.
  */
 class PressResourceController extends Controller
 {
@@ -47,8 +47,8 @@ class PressResourceController extends Controller
             'type'        => $r->type,
             'name'        => $r->translate('name', $lang),
             'description' => $r->translate('description', $lang),
-            'file_url'    => $r->file_path ? url("storage/{$r->file_path}") : null,
-            'thumbnail'   => $r->thumbnail_path ? url("storage/{$r->thumbnail_path}") : null,
+            'file_url'    => $r->resolveUrl($r->file_path),
+            'thumbnail'   => $r->resolveUrl($r->thumbnail_path),
             'file_format' => $r->file_format,
             'file_size'   => $r->file_size,
         ]);
@@ -80,7 +80,7 @@ class PressResourceController extends Controller
 
         return response()->json([
             'success'     => true,
-            'file_url'    => url("storage/{$resource->file_path}"),
+            'file_url'    => $resource->resolveUrl($resource->file_path),
             'file_format' => $resource->file_format,
             'file_size'   => $resource->file_size,
         ]);

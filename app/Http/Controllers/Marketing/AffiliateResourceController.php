@@ -100,7 +100,7 @@ class AffiliateResourceController extends Controller
 
         return response()->json([
             'success'  => true,
-            'file_url' => url("storage/{$resource->file_path}"),
+            'file_url' => $resource->resolveUrl($resource->file_path),
             'file_format' => $resource->file_format,
             'file_size'   => $resource->file_size,
         ]);
