@@ -12,8 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Global middleware — runs on ALL requests (including preflight OPTIONS)
-        $middleware->prepend(\App\Http\Middleware\CorsMiddleware::class);
+        // CORS is handled by Laravel's built-in HandleCors + config/cors.php
 
         $middleware->alias([
             'firebase.webhook'   => \App\Http\Middleware\VerifyFirebaseWebhook::class,
