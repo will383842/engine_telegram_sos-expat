@@ -39,6 +39,7 @@ class JobTrackerController extends Controller
             $query->where('poster', $poster);
         }
         if ($search = $request->input('search')) {
+            $search = Str::limit($search, 200);
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'ilike', "%{$search}%")
                   ->orWhere('site', 'ilike', "%{$search}%")
@@ -155,7 +156,7 @@ class JobTrackerController extends Controller
     public function bulkUpdateStatus(Request $request): JsonResponse
     {
         $request->validate([
-            'ids' => 'required|array|min:1',
+            'ids' => 'required|array|min:1|max:500',
             'ids.*' => 'uuid',
             'status' => 'required|string|in:draft,pending,approved,active,expired,rejected',
         ]);
@@ -169,7 +170,7 @@ class JobTrackerController extends Controller
     public function bulkTrash(Request $request): JsonResponse
     {
         $request->validate([
-            'ids' => 'required|array|min:1',
+            'ids' => 'required|array|min:1|max:500',
             'ids.*' => 'uuid',
         ]);
 
@@ -188,7 +189,7 @@ class JobTrackerController extends Controller
     public function importAds(Request $request): JsonResponse
     {
         $request->validate([
-            'ads' => 'required|array|min:1',
+            'ads' => 'required|array|min:1|max:1000',
             'ads.*.title' => 'required|string|max:500',
         ]);
 

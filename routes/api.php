@@ -150,21 +150,21 @@ Route::middleware('firebase.webhook')->prefix('job-tracker')->group(function () 
     // Stats
     Route::get('/stats', [JobTrackerController::class, 'stats']);
 
-    // Ads CRUD
+    // Ads — static routes FIRST (before {id} catch-all)
     Route::get('/ads', [JobTrackerController::class, 'listAds']);
     Route::post('/ads', [JobTrackerController::class, 'createAd']);
+    Route::post('/ads/bulk-status', [JobTrackerController::class, 'bulkUpdateStatus']);
+    Route::post('/ads/bulk-trash', [JobTrackerController::class, 'bulkTrash']);
+    Route::post('/ads/import', [JobTrackerController::class, 'importAds']);
+    Route::delete('/trash/empty', [JobTrackerController::class, 'emptyTrash']);
+
+    // Ads — parametric routes AFTER static routes
     Route::put('/ads/{id}', [JobTrackerController::class, 'updateAd']);
     Route::delete('/ads/{id}/trash', [JobTrackerController::class, 'trashAd']);
     Route::post('/ads/{id}/restore', [JobTrackerController::class, 'restoreAd']);
     Route::delete('/ads/{id}', [JobTrackerController::class, 'destroyAd']);
-    Route::delete('/trash/empty', [JobTrackerController::class, 'emptyTrash']);
 
-    // Ads bulk
-    Route::post('/ads/bulk-status', [JobTrackerController::class, 'bulkUpdateStatus']);
-    Route::post('/ads/bulk-trash', [JobTrackerController::class, 'bulkTrash']);
-    Route::post('/ads/import', [JobTrackerController::class, 'importAds']);
-
-    // Sites CRUD
+    // Sites — static routes first
     Route::get('/sites', [JobTrackerController::class, 'listSites']);
     Route::post('/sites', [JobTrackerController::class, 'createSite']);
     Route::put('/sites/{id}', [JobTrackerController::class, 'updateSite']);

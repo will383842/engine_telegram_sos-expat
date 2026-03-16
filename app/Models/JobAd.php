@@ -14,6 +14,14 @@ class JobAd extends Model
 
     protected $table = 'job_ads';
 
+    protected $attributes = [
+        'status' => 'draft',
+        'responses' => 0,
+        'response_history' => '[]',
+        'tags' => '[]',
+        'audit' => '[]',
+    ];
+
     protected $fillable = [
         'title',
         'site',
