@@ -11,19 +11,20 @@ namespace App\Data;
  */
 class GeoData
 {
-    /** 11 roles for Telegram groups */
+    /** All system roles */
     public const ROLES = [
         'chatter', 'influencer', 'blogger', 'group_admin',
         'client', 'lawyer', 'expat', 'partner',
         'captain', 'captain_chatter', 'affiliate',
     ];
 
-    /** Role labels for group names */
+    /** Role labels */
     public const ROLE_LABELS = [
         'chatter'         => 'Chatter',
         'influencer'      => 'Influencer',
         'blogger'         => 'Blogger',
         'group_admin'     => 'Group Admin',
+        'groupAdmin'      => 'Group Admin',
         'client'          => 'Client',
         'lawyer'          => 'Avocat',
         'expat'           => 'Expatrié Aidant',

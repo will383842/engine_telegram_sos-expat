@@ -144,16 +144,65 @@ class EventController extends Controller
         $data = $request->input('payload', $request->input('data', $request->all()));
         $now = Carbon::now('Europe/Paris');
 
-        $variables = [
-            'SENDER_NAME'     => $data['name'] ?? $data['senderName'] ?? 'N/A',
-            'SENDER_EMAIL'    => $data['email'] ?? $data['senderEmail'] ?? 'N/A',
-            'SUBJECT'         => $data['subject'] ?? 'N/A',
-            'MESSAGE_PREVIEW' => mb_substr($data['message'] ?? '', 0, 200),
-            'DATE'            => $now->format('d/m/Y'),
-            'TIME'            => $now->format('H:i'),
-        ];
+        $category = $data['category'] ?? '';
+        $isPress = strtolower($category) === 'press';
 
-        $this->notificationService->sendNotification('new_contact_message', $variables);
+        $senderName = $data['name'] ?? $data['senderName'] ?? 'N/A';
+        $senderEmail = $data['email'] ?? $data['senderEmail'] ?? 'N/A';
+        $subject = $data['subject'] ?? 'N/A';
+        $messagePreview = mb_substr($data['message'] ?? '', 0, 200);
+        $date = $now->format('d/m/Y');
+        $time = $now->format('H:i');
+
+        if ($isPress) {
+            // Press contact: send a distinct inline message (bypasses template for guaranteed visibility)
+            $message = "📰🎙 MESSAGE PRESSE / MEDIA\n\n"
+                . "👤 Journaliste: {$senderName}\n"
+                . "📧 Email: {$senderEmail}\n"
+                . "📋 Sujet: {$subject}\n"
+                . "💬 {$messagePreview}\n"
+                . "📅 {$date} a {$time}\n\n"
+                . "⚡ Repondre sous 24h — priorite presse";
+
+            // Route via inbox bot (new_contact_message channel)
+            $bots = TelegramBot::forEvent('new_contact_message');
+
+            if ($bots->isNotEmpty()) {
+                foreach ($bots as $bot) {
+                    $chatId = $bot->recipient_chat_id ?? '';
+                    if (!empty($chatId)) {
+                        $this->messageQueueService->enqueue(
+                            chatId: $chatId,
+                            message: $message,
+                            source: 'new_press_message',
+                            botSlug: $bot->slug,
+                        );
+                    }
+                }
+            } else {
+                // Legacy fallback
+                $chatId = AdminConfig::current()->recipient_chat_id ?? '';
+                if (!empty($chatId)) {
+                    $this->messageQueueService->enqueue(
+                        chatId: $chatId,
+                        message: $message,
+                        source: 'new_press_message',
+                        botSlug: 'main',
+                    );
+                }
+            }
+        } else {
+            $variables = [
+                'SENDER_NAME'     => $senderName,
+                'SENDER_EMAIL'    => $senderEmail,
+                'SUBJECT'         => $subject,
+                'MESSAGE_PREVIEW' => $messagePreview,
+                'DATE'            => $date,
+                'TIME'            => $time,
+            ];
+
+            $this->notificationService->sendNotification('new_contact_message', $variables);
+        }
 
         return response()->json(['success' => true]);
     }

@@ -238,102 +238,158 @@ class GroupController extends Controller
      * ---------------------------------------------------------------- */
 
     /**
+     * All 68 Telegram invite links.
+     * Key = slug, Value = invite link (empty string = not yet created).
+     */
+    private const SEED_LINKS = [
+        // ── Chatters: 14 continent groups (FR/EN × 7 continents) ──
+        'chatter_continent_AF_fr' => 'https://t.me/+QS1P7KIAzcAxZDg0',
+        'chatter_continent_AF_en' => 'https://t.me/+FLnbGk4cLUVmNzdk',
+        'chatter_continent_AS_fr' => 'https://t.me/+EN4DBiRyk3FiNDI0',
+        'chatter_continent_AS_en' => 'https://t.me/+2nh6iyO2iOg5NDBk',
+        'chatter_continent_EU_fr' => 'https://t.me/+fjLzsepnXs4wZWY0',
+        'chatter_continent_EU_en' => 'https://t.me/+5-vmAdu-2tdiZTg8',
+        'chatter_continent_NA_fr' => 'https://t.me/+Pduz1TVGTuhjYjA0',
+        'chatter_continent_NA_en' => 'https://t.me/+gHDGVFKYdIViYzI0',
+        'chatter_continent_SA_fr' => 'https://t.me/+xfwsxaZFE14wZTQ0',
+        'chatter_continent_SA_en' => 'https://t.me/+DfY52ks0vcg3YTc0',
+        'chatter_continent_OC_fr' => 'https://t.me/+CiokZ3rKCzU2MzFk',
+        'chatter_continent_OC_en' => 'https://t.me/+aCZMkDMrYjY0NDY0',
+        'chatter_continent_ME_fr' => 'https://t.me/+bZlABDWbIfBmM2M0',
+        'chatter_continent_ME_en' => 'https://t.me/+M2XdoMdjlhBmM2Q0',
+        // ── Influencers: 9 language groups ──
+        'influencer_lang_fr' => 'https://t.me/+zlKPgGzyyuk5YWJk',
+        'influencer_lang_en' => 'https://t.me/+BeNd30OjKKNlNWQ0',
+        'influencer_lang_es' => 'https://t.me/+llpjaM5pGJljY2Fk',
+        'influencer_lang_pt' => 'https://t.me/+qaHxU4-jUIg4Mzc8',
+        'influencer_lang_de' => 'https://t.me/+GWMZVknbn7FmNDQ0',
+        'influencer_lang_ru' => 'https://t.me/+U3FfjEd2EE40MzM0',
+        'influencer_lang_ar' => 'https://t.me/+bes_k8Y4rOs5OGQ0',
+        'influencer_lang_zh' => 'https://t.me/+QLjQVp6765A1ZGRk',
+        'influencer_lang_hi' => 'https://t.me/+CT7-Ikat_dM5YTE0',
+        // ── Bloggers: 9 language groups ──
+        'blogger_lang_fr' => 'https://t.me/+OU9w5x4RPuA2YjM0',
+        'blogger_lang_en' => 'https://t.me/+QkSfgVw9WTFjZjZk',
+        'blogger_lang_es' => 'https://t.me/+sZBC0xzxeds3Y2Q0',
+        'blogger_lang_pt' => 'https://t.me/+TeKa7RK3nkhmOGY0',
+        'blogger_lang_de' => 'https://t.me/+huSf3QXSg1kyZGY0',
+        'blogger_lang_ru' => 'https://t.me/+vdMx-xVFT6Y5Yzk0',
+        'blogger_lang_ar' => 'https://t.me/+8UWvyUiECYlhZTc0',
+        'blogger_lang_zh' => 'https://t.me/+JhMUWfavWTY3ODc8',
+        'blogger_lang_hi' => 'https://t.me/+r8LIxdAm-ZoxMDBk',
+        // ── Group Admins: 9 language groups ──
+        'groupAdmin_lang_fr' => 'https://t.me/+i_5tGY2azu1mMTg8',
+        'groupAdmin_lang_en' => 'https://t.me/+lFFm_NPGOnI5N2Jk',
+        'groupAdmin_lang_es' => 'https://t.me/+gBbY-cjTqlU0ODE0',
+        'groupAdmin_lang_pt' => 'https://t.me/+hrfSF5ICzCQyZjJk',
+        'groupAdmin_lang_de' => 'https://t.me/+2CiWLV1_9E9lZDk0',
+        'groupAdmin_lang_ru' => 'https://t.me/+okjF6z7rh4oxYjY0',
+        'groupAdmin_lang_ar' => 'https://t.me/+Qowimt46reBjN2M0',
+        'groupAdmin_lang_zh' => 'https://t.me/+vD11u5pCa781M2I0',
+        'groupAdmin_lang_hi' => 'https://t.me/+PDietMVx76tkNjk0',
+        // ── Clients: 9 language groups ──
+        'client_lang_fr' => 'https://t.me/+llUUyPKDiZBhYzc0',
+        'client_lang_en' => 'https://t.me/+qso-1ETa_G1jMzdk',
+        'client_lang_es' => 'https://t.me/+-S7-7ErLhuc4Mzdk',
+        'client_lang_pt' => 'https://t.me/+0Wj1G6UdvPE1NDFk',
+        'client_lang_de' => 'https://t.me/+dMDNZ4-FjKxkNmNk',
+        'client_lang_ru' => 'https://t.me/+4YKj7xcJgdQ3ZmM0',
+        'client_lang_ar' => 'https://t.me/+ErlIyf_DpQFiNTA0',
+        'client_lang_zh' => 'https://t.me/+s8_dHD09Ydw1ODFk',
+        'client_lang_hi' => '',  // TODO: create group
+        // ── Lawyers: 9 language groups ──
+        'lawyer_lang_fr' => '',  // TODO: create group
+        'lawyer_lang_en' => '',  // TODO: create group
+        'lawyer_lang_es' => '',  // TODO: create group
+        'lawyer_lang_pt' => '',  // TODO: create group
+        'lawyer_lang_de' => '',  // TODO: create group
+        'lawyer_lang_ru' => '',  // TODO: create group
+        'lawyer_lang_ar' => '',  // TODO: create group
+        'lawyer_lang_zh' => '',  // TODO: create group
+        'lawyer_lang_hi' => '',  // TODO: create group
+        // ── Expats: 9 language groups ──
+        'expat_lang_fr' => '',  // TODO: create group
+        'expat_lang_en' => '',  // TODO: create group
+        'expat_lang_es' => '',  // TODO: create group
+        'expat_lang_pt' => '',  // TODO: create group
+        'expat_lang_de' => '',  // TODO: create group
+        'expat_lang_ru' => '',  // TODO: create group
+        'expat_lang_ar' => '',  // TODO: create group
+        'expat_lang_zh' => '',  // TODO: create group
+        'expat_lang_hi' => '',  // TODO: create group
+    ];
+
+    /**
      * POST /api/admin/groups/seed
      *
-     * Seed all 68 default groups.
+     * Seed all 68 default groups with pre-configured invite links.
+     * Uses updateOrCreate so existing groups get their links updated.
      */
     public function seed(): JsonResponse
     {
         $created = 0;
-        $skipped = 0;
+        $updated = 0;
 
         // 1. Chatters: 7 continents × 2 languages (FR + EN) = 14 continent groups
         foreach (self::CONTINENTS as $code => $continent) {
             foreach (['fr', 'en'] as $lang) {
                 $slug = "chatter_continent_{$code}_{$lang}";
-
-                if (TelegramGroup::where('slug', $slug)->exists()) {
-                    $skipped++;
-                    continue;
-                }
-
                 $flag = self::LANGUAGE_FLAGS[$lang];
-                TelegramGroup::create([
-                    'slug'           => $slug,
-                    'name'           => "Chatters {$continent['emoji']} {$continent['name']} {$flag}",
-                    'link'           => '',
-                    'language'       => $lang,
-                    'role'           => 'chatter',
-                    'type'           => 'continent',
-                    'continent_code' => $code,
-                    'enabled'        => true,
-                    'managers'       => [],
-                ]);
-                $created++;
+                $link = self::SEED_LINKS[$slug] ?? '';
+
+                $existed = TelegramGroup::where('slug', $slug)->exists();
+
+                TelegramGroup::updateOrCreate(
+                    ['slug' => $slug],
+                    [
+                        'name'           => "Chatters {$continent['emoji']} {$continent['name']} {$flag}",
+                        'link'           => $link,
+                        'language'       => $lang,
+                        'role'           => 'chatter',
+                        'type'           => 'continent',
+                        'continent_code' => $code,
+                        'enabled'        => $link !== '',
+                        'managers'       => [],
+                    ]
+                );
+                $existed ? $updated++ : $created++;
             }
         }
 
-        // 2. Language groups for: influencer, blogger, groupAdmin, client (enabled)
-        foreach (['influencer', 'blogger', 'groupAdmin', 'client'] as $role) {
+        // 2. Language groups for: influencer, blogger, groupAdmin, client, lawyer, expat
+        foreach (['influencer', 'blogger', 'groupAdmin', 'client', 'lawyer', 'expat'] as $role) {
             foreach (self::LANGUAGE_FLAGS as $lang => $flag) {
                 $slug = "{$role}_lang_{$lang}";
-
-                if (TelegramGroup::where('slug', $slug)->exists()) {
-                    $skipped++;
-                    continue;
-                }
-
+                $link = self::SEED_LINKS[$slug] ?? '';
                 $label = self::ROLE_LABELS[$role] ?? ucfirst($role);
                 $langName = self::LANGUAGE_NAMES[$lang] ?? $lang;
 
-                TelegramGroup::create([
-                    'slug'           => $slug,
-                    'name'           => "{$label} {$flag} {$langName}",
-                    'link'           => '',
-                    'language'       => $lang,
-                    'role'           => $role,
-                    'type'           => 'language',
-                    'continent_code' => null,
-                    'enabled'        => true,
-                    'managers'       => [],
-                ]);
-                $created++;
-            }
-        }
+                $existed = TelegramGroup::where('slug', $slug)->exists();
 
-        // 3. Language groups for: lawyer, expat (disabled, no links)
-        foreach (['lawyer', 'expat'] as $role) {
-            foreach (self::LANGUAGE_FLAGS as $lang => $flag) {
-                $slug = "{$role}_lang_{$lang}";
-
-                if (TelegramGroup::where('slug', $slug)->exists()) {
-                    $skipped++;
-                    continue;
-                }
-
-                $label = self::ROLE_LABELS[$role] ?? ucfirst($role);
-                $langName = self::LANGUAGE_NAMES[$lang] ?? $lang;
-
-                TelegramGroup::create([
-                    'slug'           => $slug,
-                    'name'           => "{$label} {$flag} {$langName}",
-                    'link'           => '',
-                    'language'       => $lang,
-                    'role'           => $role,
-                    'type'           => 'language',
-                    'continent_code' => null,
-                    'enabled'        => false,
-                    'managers'       => [],
-                ]);
-                $created++;
+                TelegramGroup::updateOrCreate(
+                    ['slug' => $slug],
+                    [
+                        'name'           => "{$label} {$flag} {$langName}",
+                        'link'           => $link,
+                        'language'       => $lang,
+                        'role'           => $role,
+                        'type'           => 'language',
+                        'continent_code' => null,
+                        'enabled'        => $link !== '',
+                        'managers'       => [],
+                    ]
+                );
+                $existed ? $updated++ : $created++;
             }
         }
 
         return response()->json([
             'success' => true,
             'created' => $created,
-            'skipped' => $skipped,
+            'updated' => $updated,
             'total'   => TelegramGroup::count(),
+            'with_links' => TelegramGroup::where('link', '!=', '')->count(),
+            'without_links' => TelegramGroup::where('link', '')->count(),
         ]);
     }
 
@@ -374,7 +430,7 @@ class GroupController extends Controller
                     'role'           => $role,
                     'type'           => 'continent',
                     'continent_code' => $code,
-                    'enabled'        => true,
+                    'enabled'        => false,
                     'managers'       => [],
                 ]);
                 $created++;
@@ -402,7 +458,7 @@ class GroupController extends Controller
         ]);
 
         $role = $validated['role'];
-        $enabled = $validated['enabled'] ?? true;
+        $enabled = $validated['enabled'] ?? false;
         $label = self::ROLE_LABELS[$role] ?? ucfirst($role);
         $created = 0;
 

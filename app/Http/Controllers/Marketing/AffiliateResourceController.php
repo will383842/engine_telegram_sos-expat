@@ -239,15 +239,12 @@ class AffiliateResourceController extends Controller
             }
 
             $data = $doc->data();
-            $affiliateCode = $data['affiliateCodeClient'] ?? $data['affiliateCode'] ?? '';
-            $recruitmentCode = $data['affiliateCodeRecruitment'] ?? '';
+            $affiliateCode = $data['affiliateCode'] ?? $data['affiliateCodeClient'] ?? '';
             $firstName = $data['firstName'] ?? $data['first_name'] ?? '';
             $name = ($data['firstName'] ?? '') . ' ' . ($data['lastName'] ?? '');
 
             return [
-                '{{AFFILIATE_LINK}}'    => "https://sos-expat.com/?ref={$affiliateCode}",
-                '{{RECRUITMENT_LINK}}'  => "https://sos-expat.com/chatter/register?ref={$recruitmentCode}",
-                '{{PROVIDER_LINK}}'     => "https://sos-expat.com/register-provider?ref={$affiliateCode}",
+                '{{AFFILIATE_LINK}}'    => "https://sos-expat.com/r/{$affiliateCode}",
                 '{{GROUP_NAME}}'        => $data['groupName'] ?? '',
                 '{{ADMIN_NAME}}'        => trim($name),
                 '{{ADMIN_FIRST_NAME}}'  => $firstName,

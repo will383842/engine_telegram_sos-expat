@@ -16,6 +16,7 @@ class DefaultTemplates
         'daily_report',
         'new_provider',
         'new_contact_message',
+        'new_press_message',
         'negative_review',
         'security_alert',
         'withdrawal_request',
@@ -135,6 +136,18 @@ class DefaultTemplates
                 📋 Sujet: {{SUBJECT}}
                 💬 {{MESSAGE_PREVIEW}}
                 📅 {{DATE}} a {{TIME}}
+                TPL,
+
+            'new_press_message' => <<<'TPL'
+                📰🎙 MESSAGE PRESSE / MEDIA
+
+                👤 Journaliste: {{SENDER_NAME}}
+                📧 Email: {{SENDER_EMAIL}}
+                📋 Sujet: {{SUBJECT}}
+                💬 {{MESSAGE_PREVIEW}}
+                📅 {{DATE}} a {{TIME}}
+
+                ⚡ Repondre sous 24h — priorite presse
                 TPL,
 
             'negative_review' => <<<'TPL'
@@ -282,6 +295,18 @@ class DefaultTemplates
                 📋 Subject: {{SUBJECT}}
                 💬 {{MESSAGE_PREVIEW}}
                 📅 {{DATE}} at {{TIME}}
+                TPL,
+
+            'new_press_message' => <<<'TPL'
+                📰🎙 PRESS / MEDIA MESSAGE
+
+                👤 Journalist: {{SENDER_NAME}}
+                📧 Email: {{SENDER_EMAIL}}
+                📋 Subject: {{SUBJECT}}
+                💬 {{MESSAGE_PREVIEW}}
+                📅 {{DATE}} at {{TIME}}
+
+                ⚡ Reply within 24h — press priority
                 TPL,
 
             'negative_review' => <<<'TPL'
