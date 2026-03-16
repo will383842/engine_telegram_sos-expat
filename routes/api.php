@@ -7,6 +7,7 @@ use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\LogController;
+use App\Http\Controllers\JobTrackerController;
 use App\Http\Controllers\Marketing\AdminResourceController;
 use App\Http\Controllers\Marketing\AffiliateResourceController;
 use App\Http\Controllers\Marketing\PressResourceController;
@@ -139,4 +140,33 @@ Route::middleware(['firebase.affiliate', 'throttle:120,1'])->prefix('marketing')
 Route::middleware('throttle:60,1')->prefix('press')->group(function () {
     Route::get('/resources', [PressResourceController::class, 'index']);
     Route::get('/resources/{id}/download', [PressResourceController::class, 'download']);
+});
+
+/* ==========================================================================
+ * Job Ads Tracker (secured by API secret — same as Firebase webhooks)
+ * ======================================================================== */
+
+Route::middleware('firebase.webhook')->prefix('job-tracker')->group(function () {
+    // Stats
+    Route::get('/stats', [JobTrackerController::class, 'stats']);
+
+    // Ads CRUD
+    Route::get('/ads', [JobTrackerController::class, 'listAds']);
+    Route::post('/ads', [JobTrackerController::class, 'createAd']);
+    Route::put('/ads/{id}', [JobTrackerController::class, 'updateAd']);
+    Route::delete('/ads/{id}/trash', [JobTrackerController::class, 'trashAd']);
+    Route::post('/ads/{id}/restore', [JobTrackerController::class, 'restoreAd']);
+    Route::delete('/ads/{id}', [JobTrackerController::class, 'destroyAd']);
+    Route::delete('/trash/empty', [JobTrackerController::class, 'emptyTrash']);
+
+    // Ads bulk
+    Route::post('/ads/bulk-status', [JobTrackerController::class, 'bulkUpdateStatus']);
+    Route::post('/ads/bulk-trash', [JobTrackerController::class, 'bulkTrash']);
+    Route::post('/ads/import', [JobTrackerController::class, 'importAds']);
+
+    // Sites CRUD
+    Route::get('/sites', [JobTrackerController::class, 'listSites']);
+    Route::post('/sites', [JobTrackerController::class, 'createSite']);
+    Route::put('/sites/{id}', [JobTrackerController::class, 'updateSite']);
+    Route::delete('/sites/{id}', [JobTrackerController::class, 'destroySite']);
 });
