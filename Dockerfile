@@ -7,7 +7,13 @@ RUN apk add --no-cache \
     icu-dev \
     oniguruma-dev \
     linux-headers \
+    freetype-dev \
+    libjpeg-turbo-dev \
+    libpng-dev \
     $PHPIZE_DEPS
+
+# Configure GD with freetype/jpeg support
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg
 
 # Install PHP extensions
 RUN docker-php-ext-install \
@@ -18,7 +24,8 @@ RUN docker-php-ext-install \
     mbstring \
     bcmath \
     opcache \
-    pcntl
+    pcntl \
+    gd
 
 # Install Redis + gRPC extensions
 RUN pecl install redis grpc && docker-php-ext-enable redis grpc
