@@ -35,6 +35,7 @@ Route::middleware('firebase.webhook')->prefix('events')->group(function () {
     Route::post('/user-feedback', [EventController::class, 'userFeedback']);
     Route::post('/partner-application', [EventController::class, 'partnerApplication']);
     Route::post('/withdrawal-status', [EventController::class, 'withdrawalStatusChanged']);
+    Route::post('/payout-failed', [EventController::class, 'payoutFailed']);
 });
 
 /* ==========================================================================
