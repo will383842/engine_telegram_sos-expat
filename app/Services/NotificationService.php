@@ -147,6 +147,45 @@ class NotificationService
     }
 
     /**
+     * Send a raw pre-formatted message to the main bot (no template rendering).
+     * Used for critical system alerts (balance monitoring, service health).
+     */
+    public function sendRawToMainBot(string $message): bool
+    {
+        try {
+            // Try main bot first
+            $bot = TelegramBot::where('slug', 'main')->where('is_active', true)->first();
+            $chatId = $bot?->recipient_chat_id;
+
+            // Fallback to legacy admin config
+            if (!$chatId) {
+                $adminConfig = AdminConfig::first();
+                $chatId = $adminConfig?->recipient_chat_id;
+            }
+
+            if (!$chatId) {
+                Log::warning('NotificationService: No chat_id for raw alert');
+                return false;
+            }
+
+            $this->messageQueue->enqueue(
+                chatId: $chatId,
+                message: $message,
+                source: 'service_balance_alert',
+                parseMode: 'Markdown',
+                botSlug: 'main',
+            );
+
+            $this->logNotification('service_balance_alert', $chatId, $message, 'sent', null, [], null, 'main');
+
+            return true;
+        } catch (\Throwable $e) {
+            Log::error('NotificationService: Failed to send raw alert', ['error' => $e->getMessage()]);
+            return false;
+        }
+    }
+
+    /**
      * Check if variables pass the given filters.
      */
     protected function passesFilters(array $variables, array $filters): bool

@@ -456,6 +456,27 @@ class EventController extends Controller
         return response()->json(['success' => true]);
     }
 
+    /**
+     * Service Balance Alert — Critical monitoring for Twilio, Stripe, OpenAI, etc.
+     * Sent every 4h by Firebase checkServiceBalances cron.
+     */
+    public function serviceBalanceAlert(Request $request): JsonResponse
+    {
+        $data = $request->input('payload', $request->input('data', $request->all()));
+
+        $service = strtoupper($data['service'] ?? 'UNKNOWN');
+        $balance = $data['balance'] ?? 0;
+        $threshold = $data['threshold'] ?? 0;
+        $currency = $data['currency'] ?? 'USD';
+        $alertLevel = $data['alertLevel'] ?? 'warning';
+        $message = $data['message'] ?? "⚠️ {$service} balance low: {$currency} {$balance}";
+
+        // Send directly via main bot (critical alert, no template needed)
+        $this->notificationService->sendRawToMainBot($message);
+
+        return response()->json(['success' => true]);
+    }
+
     /* ==================================================================
      * Helpers
      * ================================================================ */
