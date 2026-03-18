@@ -106,6 +106,27 @@ class CvAnalysisService
 
     private function buildAnalysisMessages(string $content, string $filename, string $mimeType): array
     {
+        // For PDFs, use document type (Claude supports base64 PDF)
+        if ($mimeType === 'application/pdf') {
+            return [[
+                'role' => 'user',
+                'content' => [
+                    [
+                        'type' => 'document',
+                        'source' => [
+                            'type' => 'base64',
+                            'media_type' => 'application/pdf',
+                            'data' => $content,
+                        ],
+                    ],
+                    [
+                        'type' => 'text',
+                        'text' => $this->getImagePrompt($filename),
+                    ],
+                ],
+            ]];
+        }
+
         // For images, use vision
         if (str_starts_with($mimeType, 'image/')) {
             return [[

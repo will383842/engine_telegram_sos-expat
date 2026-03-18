@@ -12,7 +12,8 @@
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
         "nutgram/nutgram": "^4.44",
-        "predis/predis": "^3.4"
+        "predis/predis": "^3.4",
+        "smalot/pdfparser": "^2.12"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

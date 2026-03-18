@@ -370,10 +370,17 @@ class JobContactController extends Controller
                 }
 
                 if (in_array($ext, ['pdf', 'doc', 'docx', 'txt', 'rtf'])) {
-                    // For PDF/DOCX, extract text and analyze
+                    // For PDF/DOCX, extract text and analyze with AI
                     $textContent = $this->extractTextFromFile($content, $ext, $filename);
                     if ($textContent) {
                         $contactData = $cvService->analyzeText($textContent, $filename);
+                    }
+
+                    // Fallback: if text extraction failed (scanned PDF), use vision API
+                    if (!$contactData && $ext === 'pdf' && strlen($content) <= 10 * 1024 * 1024) {
+                        Log::info('Using vision fallback for PDF', ['file' => $filename]);
+                        $base64 = base64_encode($content);
+                        $contactData = $cvService->analyzeFile($base64, $filename, 'application/pdf');
                     }
                 } elseif (in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
                     // For images, send to AI vision
@@ -778,40 +785,36 @@ class JobContactController extends Controller
 
     private function extractTextFromPDF(string $content): ?string
     {
-        // Basic PDF text extraction (works for text-based PDFs)
-        // For scanned PDFs, the AI vision endpoint should be used instead
-        $text = '';
+        // Use smalot/pdfparser for robust PDF text extraction
+        try {
+            $parser = new \Smalot\PdfParser\Parser();
+            $pdf = $parser->parseContent($content);
+            $text = $pdf->getText();
 
-        // Try to extract text between stream/endstream with FlateDecode
-        if (preg_match_all('/stream\s*\n(.*?)\nendstream/s', $content, $matches)) {
-            foreach ($matches[1] as $stream) {
-                $decoded = @gzuncompress($stream);
-                if ($decoded) {
-                    // Extract text operators (Tj, TJ, ')
-                    if (preg_match_all('/\((.*?)\)\s*Tj/s', $decoded, $textMatches)) {
-                        $text .= implode(' ', $textMatches[1]) . "\n";
-                    }
-                    if (preg_match_all('/\[(.*?)\]\s*TJ/s', $decoded, $tjMatches)) {
-                        foreach ($tjMatches[1] as $tj) {
-                            if (preg_match_all('/\((.*?)\)/', $tj, $parts)) {
-                                $text .= implode('', $parts[1]) . ' ';
-                            }
-                        }
-                        $text .= "\n";
-                    }
-                }
+            // Clean up extracted text
+            if ($text) {
+                $text = preg_replace('/\s+/', ' ', $text);
+                $text = preg_replace('/\n\s*\n/', "\n", $text);
+                $text = trim($text);
             }
-        }
 
-        // Fallback: try to find readable text directly
-        if (empty(trim($text))) {
-            // Simple regex to grab readable text fragments
-            if (preg_match_all('/\(([\x20-\x7e]{3,})\)/', $content, $matches)) {
-                $text = implode(' ', $matches[1]);
+            // If we got meaningful text (at least 50 chars), return it
+            if ($text && strlen($text) >= 50) {
+                return $text;
             }
-        }
 
-        return !empty(trim($text)) ? trim($text) : null;
+            // Too little text — likely a scanned PDF, return null for vision fallback
+            Log::info('PDF text extraction yielded too little text, will use vision fallback', [
+                'text_length' => strlen($text ?? ''),
+            ]);
+
+            return null;
+        } catch (\Throwable $e) {
+            Log::warning('PDF text extraction failed, will use vision fallback', [
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
     }
 
     private function extractTextFromDocx(string $content): ?string
