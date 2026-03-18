@@ -351,21 +351,23 @@ class JobContactController extends Controller
             $contactData = null;
 
             try {
-                if ($ext === 'csv') {
-                    // Parse CSV file inside ZIP
-                    $csvContacts = $this->parseCSVContent($content, $categoryId, $sourceAdId, $operator, $filename);
-                    foreach ($csvContacts as $csvContact) {
-                        $duplicate = $this->findDuplicate($csvContact);
+                if ($ext === 'csv' || in_array($ext, ['xlsx', 'xls'])) {
+                    // Parse CSV or Excel file inside ZIP
+                    $tabularContacts = $ext === 'csv'
+                        ? $this->parseCSVContent($content, $categoryId, $sourceAdId, $operator, $filename)
+                        : $this->parseExcelContent($content, $ext, $categoryId, $sourceAdId, $operator, $filename);
+                    foreach ($tabularContacts as $tabContact) {
+                        $duplicate = $this->findDuplicate($tabContact);
                         if ($duplicate) {
-                            $csvContact['is_duplicate'] = true;
-                            $csvContact['duplicate_of'] = $duplicate->id;
+                            $tabContact['is_duplicate'] = true;
+                            $tabContact['duplicate_of'] = $duplicate->id;
                             $results['duplicates']++;
                         }
-                        JobContact::create($csvContact);
+                        JobContact::create($tabContact);
                         $results['created']++;
                     }
                     $results['files_processed']++;
-                    $results['details'][] = ['file' => $filename, 'status' => 'ok', 'contacts' => count($csvContacts)];
+                    $results['details'][] = ['file' => $filename, 'status' => 'ok', 'contacts' => count($tabularContacts)];
                     continue;
                 }
 
@@ -439,7 +441,7 @@ class JobContactController extends Controller
     public function analyzeFile(Request $request): JsonResponse
     {
         $request->validate([
-            'file' => 'required|file|mimes:pdf,docx,doc,csv,txt,rtf,jpg,jpeg,png,webp|max:20480',
+            'file' => 'required|file|mimes:pdf,docx,doc,csv,txt,rtf,jpg,jpeg,png,webp,xlsx,xls|max:20480',
             'category_id' => 'nullable|uuid|exists:job_categories,id',
             'source_ad_id' => 'nullable|uuid',
             'operator' => 'nullable|string',
@@ -470,6 +472,16 @@ class JobContactController extends Controller
                 $filename
             );
             return response()->json(['success' => true, 'contacts' => $contacts, 'type' => 'csv']);
+        } elseif (in_array($ext, ['xlsx', 'xls'])) {
+            $contacts = $this->parseExcelContent(
+                $file->get(),
+                $ext,
+                $request->input('category_id'),
+                $request->input('source_ad_id'),
+                $request->input('operator', 'system'),
+                $filename
+            );
+            return response()->json(['success' => true, 'contacts' => $contacts, 'type' => 'excel']);
         }
 
         if (!$contactData) {
@@ -756,6 +768,65 @@ class JobContactController extends Controller
                 'date' => now()->toISOString(),
                 'who' => $operator,
                 'action' => "Importé depuis CSV ({$filename})",
+            ]];
+
+            if (!empty($contactData['first_name']) || !empty($contactData['last_name']) || !empty($contactData['email']) || !empty($contactData['phone'])) {
+                $contacts[] = $contactData;
+            }
+        }
+
+        return $contacts;
+    }
+
+    /**
+     * Parse Excel (.xlsx/.xls) content into contact arrays.
+     */
+    private function parseExcelContent(string $content, string $ext, ?string $categoryId, ?string $sourceAdId, string $operator, string $filename): array
+    {
+        $tempFile = tempnam(sys_get_temp_dir(), 'excel_');
+        file_put_contents($tempFile, $content);
+
+        try {
+            $reader = $ext === 'xlsx'
+                ? new \PhpOffice\PhpSpreadsheet\Reader\Xlsx()
+                : new \PhpOffice\PhpSpreadsheet\Reader\Xls();
+            $reader->setReadDataOnly(true);
+
+            $spreadsheet = $reader->load($tempFile);
+            $worksheet = $spreadsheet->getActiveSheet();
+            $rows = $worksheet->toArray(null, true, true, false);
+        } catch (\Throwable $e) {
+            @unlink($tempFile);
+            Log::warning('Excel parsing failed', ['file' => $filename, 'error' => $e->getMessage()]);
+            return [];
+        } finally {
+            @unlink($tempFile);
+        }
+
+        if (count($rows) < 2) {
+            return [];
+        }
+
+        // First row = headers
+        $headers = array_map(fn ($h) => trim((string) ($h ?? '')), $rows[0]);
+        $cvService = new CvAnalysisService();
+        $contacts = [];
+
+        for ($i = 1; $i < count($rows); $i++) {
+            $row = array_map(fn ($v) => trim((string) ($v ?? '')), $rows[$i]);
+            if (empty(array_filter($row))) {
+                continue;
+            }
+
+            $contactData = $cvService->analyzeCSVRow($row, $headers);
+            $contactData['category_id'] = $categoryId;
+            $contactData['source_ad_id'] = $sourceAdId;
+            $contactData['source_file'] = basename($filename);
+            $contactData['source_type'] = 'csv'; // treat Excel same as CSV for source_type
+            $contactData['audit'] = [[
+                'date' => now()->toISOString(),
+                'who' => $operator,
+                'action' => "Importé depuis Excel ({$filename})",
             ]];
 
             if (!empty($contactData['first_name']) || !empty($contactData['last_name']) || !empty($contactData['email']) || !empty($contactData['phone'])) {
