@@ -25,6 +25,7 @@ class NotificationTemplateSeeder extends Seeder
             ['captain_application', 'fr', "👑 *Candidature Captain Chatter*\n\n👤 {{CANDIDATE_NAME}}\n📱 WhatsApp: {{WHATSAPP}}\n🌍 Pays: {{COUNTRY}}\n📎 CV: {{HAS_CV}}\n\n💬 {{MOTIVATION_PREVIEW}}\n\n📅 {{DATE}} à {{TIME}}"],
             ['user_feedback', 'fr', "💬 *Nouveau feedback [{{FEEDBACK_TYPE}}]*\n\n👤 De: {{USER_EMAIL}}\n📄 Page: {{PAGE}}\n\n📋 {{DESCRIPTION}}\n\n📅 {{DATE}} à {{TIME}}"],
             ['partner_application', 'fr', "🤝 *Candidature partenaire*\n\n👤 {{PARTNER_NAME}}\n📧 {{EMAIL}}\n🌐 Site: {{WEBSITE}}\n🌍 Pays: {{COUNTRY}}\n\n💬 {{MESSAGE_PREVIEW}}\n\n📅 {{DATE}} à {{TIME}}"],
+            ['payout_failed', 'fr', "🚨 *ECHEC PAYOUT*\n\n💰 Montant: {{AMOUNT}} {{CURRENCY}}\n👤 Prestataire: {{PROVIDER_EMAIL}}\n🆔 ID: {{PROVIDER_ID}}\n❌ Erreur: {{ERROR}}\n\n📅 {{DATE}} à {{TIME}}\n\n{{ACTION}}"],
 
             // ==================== ENGLISH (12) ====================
             ['new_registration', 'en', "🆕 *New Registration*\n\n👤 Role: {{ROLE_FR}}\n📧 Email: {{EMAIL}}\n📱 Phone: {{PHONE}}\n🌍 Country: {{COUNTRY}}\n📅 {{DATE}} at {{TIME}}"],
@@ -39,6 +40,7 @@ class NotificationTemplateSeeder extends Seeder
             ['captain_application', 'en', "👑 *Captain Chatter Application*\n\n👤 {{CANDIDATE_NAME}}\n📱 WhatsApp: {{WHATSAPP}}\n🌍 Country: {{COUNTRY}}\n📎 CV: {{HAS_CV}}\n\n💬 {{MOTIVATION_PREVIEW}}\n\n📅 {{DATE}} at {{TIME}}"],
             ['user_feedback', 'en', "💬 *New Feedback [{{FEEDBACK_TYPE}}]*\n\n👤 From: {{USER_EMAIL}}\n📄 Page: {{PAGE}}\n\n📋 {{DESCRIPTION}}\n\n📅 {{DATE}} at {{TIME}}"],
             ['partner_application', 'en', "🤝 *Partner Application*\n\n👤 {{PARTNER_NAME}}\n📧 {{EMAIL}}\n🌐 Website: {{WEBSITE}}\n🌍 Country: {{COUNTRY}}\n\n💬 {{MESSAGE_PREVIEW}}\n\n📅 {{DATE}} at {{TIME}}"],
+            ['payout_failed', 'en', "🚨 *PAYOUT FAILED*\n\n💰 Amount: {{AMOUNT}} {{CURRENCY}}\n👤 Provider: {{PROVIDER_EMAIL}}\n🆔 ID: {{PROVIDER_ID}}\n❌ Error: {{ERROR}}\n\n📅 {{DATE}} at {{TIME}}\n\n{{ACTION}}"],
 
             // ==================== SPANISH (12) ====================
             ['new_registration', 'es', "🆕 *Nueva inscripción*\n\n👤 Rol: {{ROLE_FR}}\n📧 {{EMAIL}}\n📱 {{PHONE}}\n🌍 {{COUNTRY}}\n📅 {{DATE}} a las {{TIME}}"],
@@ -53,6 +55,7 @@ class NotificationTemplateSeeder extends Seeder
             ['captain_application', 'es', "👑 *Candidatura Captain*\n\n👤 {{CANDIDATE_NAME}}\n🌍 {{COUNTRY}} | CV: {{HAS_CV}}\n💬 {{MOTIVATION_PREVIEW}}\n📅 {{DATE}} a las {{TIME}}"],
             ['user_feedback', 'es', "💬 *Nuevo feedback [{{FEEDBACK_TYPE}}]*\n\n👤 {{USER_EMAIL}}\n📄 {{PAGE}}\n📋 {{DESCRIPTION}}\n📅 {{DATE}} a las {{TIME}}"],
             ['partner_application', 'es', "🤝 *Candidatura socio*\n\n👤 {{PARTNER_NAME}}\n📧 {{EMAIL}}\n🌐 {{WEBSITE}}\n🌍 {{COUNTRY}}\n💬 {{MESSAGE_PREVIEW}}\n📅 {{DATE}} a las {{TIME}}"],
+            ['payout_failed', 'es', "🚨 *FALLO DE PAGO*\n\n💰 {{AMOUNT}} {{CURRENCY}}\n👤 {{PROVIDER_EMAIL}}\n❌ {{ERROR}}\n📅 {{DATE}} a las {{TIME}}\n\n{{ACTION}}"],
 
             // ==================== GERMAN (12) ====================
             ['new_registration', 'de', "🆕 *Neue Anmeldung*\n\n👤 Rolle: {{ROLE_FR}}\n📧 {{EMAIL}}\n📱 {{PHONE}}\n🌍 {{COUNTRY}}\n📅 {{DATE}} um {{TIME}}"],
@@ -67,6 +70,7 @@ class NotificationTemplateSeeder extends Seeder
             ['captain_application', 'de', "👑 *Captain Bewerbung*\n\n👤 {{CANDIDATE_NAME}}\n🌍 {{COUNTRY}} | CV: {{HAS_CV}}\n💬 {{MOTIVATION_PREVIEW}}\n📅 {{DATE}} um {{TIME}}"],
             ['user_feedback', 'de', "💬 *Neues Feedback [{{FEEDBACK_TYPE}}]*\n\n👤 {{USER_EMAIL}}\n📄 {{PAGE}}\n📋 {{DESCRIPTION}}\n📅 {{DATE}} um {{TIME}}"],
             ['partner_application', 'de', "🤝 *Partnerbewerbung*\n\n👤 {{PARTNER_NAME}}\n📧 {{EMAIL}}\n🌐 {{WEBSITE}}\n🌍 {{COUNTRY}}\n💬 {{MESSAGE_PREVIEW}}\n📅 {{DATE}} um {{TIME}}"],
+            ['payout_failed', 'de', "🚨 *AUSZAHLUNG FEHLGESCHLAGEN*\n\n💰 {{AMOUNT}} {{CURRENCY}}\n👤 {{PROVIDER_EMAIL}}\n❌ {{ERROR}}\n📅 {{DATE}} um {{TIME}}\n\n{{ACTION}}"],
 
             // ==================== PORTUGUESE (12) ====================
             ['new_registration', 'pt', "🆕 *Nova inscrição*\n\n👤 {{ROLE_FR}}\n📧 {{EMAIL}}\n📱 {{PHONE}}\n🌍 {{COUNTRY}}\n📅 {{DATE}} às {{TIME}}"],
@@ -81,6 +85,7 @@ class NotificationTemplateSeeder extends Seeder
             ['captain_application', 'pt', "👑 *Candidatura Captain*\n\n👤 {{CANDIDATE_NAME}}\n🌍 {{COUNTRY}} | CV: {{HAS_CV}}\n💬 {{MOTIVATION_PREVIEW}}\n📅 {{DATE}} às {{TIME}}"],
             ['user_feedback', 'pt', "💬 *Novo feedback [{{FEEDBACK_TYPE}}]*\n\n👤 {{USER_EMAIL}}\n📄 {{PAGE}}\n📋 {{DESCRIPTION}}\n📅 {{DATE}} às {{TIME}}"],
             ['partner_application', 'pt', "🤝 *Candidatura parceiro*\n\n👤 {{PARTNER_NAME}}\n📧 {{EMAIL}}\n🌐 {{WEBSITE}}\n🌍 {{COUNTRY}}\n💬 {{MESSAGE_PREVIEW}}\n📅 {{DATE}} às {{TIME}}"],
+            ['payout_failed', 'pt', "🚨 *FALHA NO PAGAMENTO*\n\n💰 {{AMOUNT}} {{CURRENCY}}\n👤 {{PROVIDER_EMAIL}}\n❌ {{ERROR}}\n📅 {{DATE}} às {{TIME}}\n\n{{ACTION}}"],
 
             // ==================== RUSSIAN (12) ====================
             ['new_registration', 'ru', "🆕 *Новая регистрация*\n\n👤 {{ROLE_FR}}\n📧 {{EMAIL}}\n📱 {{PHONE}}\n🌍 {{COUNTRY}}\n📅 {{DATE}} в {{TIME}}"],
@@ -95,6 +100,7 @@ class NotificationTemplateSeeder extends Seeder
             ['captain_application', 'ru', "👑 *Заявка Captain*\n\n👤 {{CANDIDATE_NAME}}\n🌍 {{COUNTRY}} | CV: {{HAS_CV}}\n💬 {{MOTIVATION_PREVIEW}}\n📅 {{DATE}} в {{TIME}}"],
             ['user_feedback', 'ru', "💬 *Новый отзыв [{{FEEDBACK_TYPE}}]*\n\n👤 {{USER_EMAIL}}\n📄 {{PAGE}}\n📋 {{DESCRIPTION}}\n📅 {{DATE}} в {{TIME}}"],
             ['partner_application', 'ru', "🤝 *Заявка партнёра*\n\n👤 {{PARTNER_NAME}}\n📧 {{EMAIL}}\n🌐 {{WEBSITE}}\n🌍 {{COUNTRY}}\n💬 {{MESSAGE_PREVIEW}}\n📅 {{DATE}} в {{TIME}}"],
+            ['payout_failed', 'ru', "🚨 *ОШИБКА ВЫПЛАТЫ*\n\n💰 {{AMOUNT}} {{CURRENCY}}\n👤 {{PROVIDER_EMAIL}}\n❌ {{ERROR}}\n📅 {{DATE}} в {{TIME}}\n\n{{ACTION}}"],
 
             // ==================== CHINESE (12) ====================
             ['new_registration', 'zh', "🆕 *新用户注册*\n\n👤 {{ROLE_FR}}\n📧 {{EMAIL}}\n📱 {{PHONE}}\n🌍 {{COUNTRY}}\n📅 {{DATE}} {{TIME}}"],
@@ -109,6 +115,7 @@ class NotificationTemplateSeeder extends Seeder
             ['captain_application', 'zh', "👑 *Captain申请*\n\n👤 {{CANDIDATE_NAME}}\n🌍 {{COUNTRY}} | CV: {{HAS_CV}}\n💬 {{MOTIVATION_PREVIEW}}\n📅 {{DATE}} {{TIME}}"],
             ['user_feedback', 'zh', "💬 *新反馈 [{{FEEDBACK_TYPE}}]*\n\n👤 {{USER_EMAIL}}\n📄 {{PAGE}}\n📋 {{DESCRIPTION}}\n📅 {{DATE}} {{TIME}}"],
             ['partner_application', 'zh', "🤝 *合作伙伴申请*\n\n👤 {{PARTNER_NAME}}\n📧 {{EMAIL}}\n🌐 {{WEBSITE}}\n🌍 {{COUNTRY}}\n💬 {{MESSAGE_PREVIEW}}\n📅 {{DATE}} {{TIME}}"],
+            ['payout_failed', 'zh', "🚨 *支付失败*\n\n💰 {{AMOUNT}} {{CURRENCY}}\n👤 {{PROVIDER_EMAIL}}\n❌ {{ERROR}}\n📅 {{DATE}} {{TIME}}\n\n{{ACTION}}"],
 
             // ==================== HINDI (12) ====================
             ['new_registration', 'hi', "🆕 *नया पंजीकरण*\n\n👤 {{ROLE_FR}}\n📧 {{EMAIL}}\n📱 {{PHONE}}\n🌍 {{COUNTRY}}\n📅 {{DATE}} {{TIME}}"],
@@ -123,6 +130,7 @@ class NotificationTemplateSeeder extends Seeder
             ['captain_application', 'hi', "👑 *Captain आवेदन*\n\n👤 {{CANDIDATE_NAME}}\n🌍 {{COUNTRY}} | CV: {{HAS_CV}}\n💬 {{MOTIVATION_PREVIEW}}\n📅 {{DATE}} {{TIME}}"],
             ['user_feedback', 'hi', "💬 *नया फीडबैक [{{FEEDBACK_TYPE}}]*\n\n👤 {{USER_EMAIL}}\n📄 {{PAGE}}\n📋 {{DESCRIPTION}}\n📅 {{DATE}} {{TIME}}"],
             ['partner_application', 'hi', "🤝 *साझेदार आवेदन*\n\n👤 {{PARTNER_NAME}}\n📧 {{EMAIL}}\n🌐 {{WEBSITE}}\n🌍 {{COUNTRY}}\n💬 {{MESSAGE_PREVIEW}}\n📅 {{DATE}} {{TIME}}"],
+            ['payout_failed', 'hi', "🚨 *भुगतान विफल*\n\n💰 {{AMOUNT}} {{CURRENCY}}\n👤 {{PROVIDER_EMAIL}}\n❌ {{ERROR}}\n📅 {{DATE}} {{TIME}}\n\n{{ACTION}}"],
 
             // ==================== ARABIC (12) ====================
             ['new_registration', 'ar', "🆕 *تسجيل جديد*\n\n👤 {{ROLE_FR}}\n📧 {{EMAIL}}\n📱 {{PHONE}}\n🌍 {{COUNTRY}}\n📅 {{DATE}} {{TIME}}"],
@@ -137,6 +145,7 @@ class NotificationTemplateSeeder extends Seeder
             ['captain_application', 'ar', "👑 *طلب Captain*\n\n👤 {{CANDIDATE_NAME}}\n🌍 {{COUNTRY}} | CV: {{HAS_CV}}\n💬 {{MOTIVATION_PREVIEW}}\n📅 {{DATE}} {{TIME}}"],
             ['user_feedback', 'ar', "💬 *تعليق جديد [{{FEEDBACK_TYPE}}]*\n\n👤 {{USER_EMAIL}}\n📄 {{PAGE}}\n📋 {{DESCRIPTION}}\n📅 {{DATE}} {{TIME}}"],
             ['partner_application', 'ar', "🤝 *طلب شراكة*\n\n👤 {{PARTNER_NAME}}\n📧 {{EMAIL}}\n🌐 {{WEBSITE}}\n🌍 {{COUNTRY}}\n💬 {{MESSAGE_PREVIEW}}\n📅 {{DATE}} {{TIME}}"],
+            ['payout_failed', 'ar', "🚨 *فشل الدفع*\n\n💰 {{AMOUNT}} {{CURRENCY}}\n👤 {{PROVIDER_EMAIL}}\n❌ {{ERROR}}\n📅 {{DATE}} {{TIME}}\n\n{{ACTION}}"],
         ];
 
         foreach ($templates as [$eventType, $language, $template]) {
@@ -157,6 +166,7 @@ class NotificationTemplateSeeder extends Seeder
             'new_provider' => true,
             'negative_review' => true,
             'security_alert' => true,
+            'payout_failed' => true,
             // Inbox events DISABLED on main bot:
             'new_contact_message' => false,
             'user_feedback' => false,

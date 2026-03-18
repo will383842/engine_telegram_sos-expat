@@ -24,6 +24,7 @@ class DefaultTemplates
         'user_feedback',
         'partner_application',
         'trustpilot_weekly_report',
+        'payout_failed',
     ];
 
     /**
@@ -227,6 +228,18 @@ class DefaultTemplates
 
                 🔗 {{PROFILE_URL}}
                 TPL,
+
+            'payout_failed' => <<<'TPL'
+                🚨 ECHEC PAYOUT
+
+                💰 Montant: {{AMOUNT}} {{CURRENCY}}
+                👤 Prestataire: {{PROVIDER_EMAIL}}
+                🆔 ID: {{PROVIDER_ID}}
+                ❌ Erreur: {{ERROR}}
+                📅 {{DATE}} a {{TIME}}
+
+                {{ACTION}}
+                TPL,
         ];
     }
 
@@ -385,6 +398,18 @@ class DefaultTemplates
                 {{NEW_REVIEWS_SECTION}}
 
                 🔗 {{PROFILE_URL}}
+                TPL,
+
+            'payout_failed' => <<<'TPL'
+                🚨 PAYOUT FAILED
+
+                💰 Amount: {{AMOUNT}} {{CURRENCY}}
+                👤 Provider: {{PROVIDER_EMAIL}}
+                🆔 ID: {{PROVIDER_ID}}
+                ❌ Error: {{ERROR}}
+                📅 {{DATE}} at {{TIME}}
+
+                {{ACTION}}
                 TPL,
         ];
     }

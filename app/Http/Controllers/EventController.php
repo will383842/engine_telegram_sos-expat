@@ -435,55 +435,23 @@ class EventController extends Controller
         $providerId = $data['providerId'] ?? 'N/A';
         $providerEmail = $data['providerEmail'] ?? 'N/A';
         $isInsufficientFunds = $data['isInsufficientFunds'] ?? false;
-        $severity = $data['severity'] ?? 'HAUTE';
-        $sessionId = $data['sessionId'] ?? 'N/A';
 
-        $emoji = $isInsufficientFunds ? "\u{1F6A8}" : "\u{26A0}\u{FE0F}";
-        $title = $isInsufficientFunds
-            ? "{$emoji} SOLDE PAYPAL INSUFFISANT"
-            : "{$emoji} ECHEC PAYOUT PAYPAL";
+        $action = $isInsufficientFunds
+            ? '💰 ACTION: Recharger le compte PayPal Business !'
+            : '🔧 ACTION: Verifier l\'email PayPal du prestataire';
 
-        $message = "{$title}\n\n"
-            . "Priorite: {$severity}\n"
-            . "Montant: {$amount} {$currency}\n"
-            . "Provider: {$providerEmail}\n"
-            . "ID: {$providerId}\n"
-            . "Session: {$sessionId}\n"
-            . "Erreur: {$error}\n"
-            . "\u{1F4C5} {$now->format('d/m/Y')} a {$now->format('H:i')}\n\n";
+        $variables = [
+            'AMOUNT'         => (string) $amount,
+            'CURRENCY'       => $currency,
+            'PROVIDER_EMAIL' => $providerEmail,
+            'PROVIDER_ID'    => $providerId,
+            'ERROR'          => $error,
+            'ACTION'         => $action,
+            'DATE'           => $now->format('d/m/Y'),
+            'TIME'           => $now->format('H:i'),
+        ];
 
-        if ($isInsufficientFunds) {
-            $message .= "\u{1F4B0} ACTION: Recharger le compte PayPal Business !";
-        } else {
-            $message .= "\u{1F527} ACTION: Verifier l'email PayPal du prestataire";
-        }
-
-        // Send to main bot (critical alerts)
-        $bots = TelegramBot::forEvent('security_alert');
-
-        if ($bots->isNotEmpty()) {
-            foreach ($bots as $bot) {
-                $chatId = $bot->recipient_chat_id ?? '';
-                if (!empty($chatId)) {
-                    $this->messageQueueService->enqueue(
-                        chatId: $chatId,
-                        message: $message,
-                        source: 'payout_failed',
-                        botSlug: $bot->slug,
-                    );
-                }
-            }
-        } else {
-            $chatId = AdminConfig::current()->recipient_chat_id ?? '';
-            if (!empty($chatId)) {
-                $this->messageQueueService->enqueue(
-                    chatId: $chatId,
-                    message: $message,
-                    source: 'payout_failed',
-                    botSlug: 'main',
-                );
-            }
-        }
+        $this->notificationService->sendNotification('payout_failed', $variables);
 
         return response()->json(['success' => true]);
     }
