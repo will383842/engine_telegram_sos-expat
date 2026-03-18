@@ -51,6 +51,10 @@ return new class extends Migration
             $table->index('source_ad_id');
             $table->index('is_duplicate');
             $table->index('duplicate_of');
+        });
+
+        // Self-referencing FK must be added AFTER table creation (PostgreSQL requirement)
+        Schema::table('job_contacts', function (Blueprint $table) {
             $table->foreign('duplicate_of')->references('id')->on('job_contacts')->nullOnDelete();
         });
     }
