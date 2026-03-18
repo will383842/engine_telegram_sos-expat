@@ -8,6 +8,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\LogController;
 use App\Http\Controllers\JobTrackerController;
+use App\Http\Controllers\JobContactController;
 use App\Http\Controllers\Marketing\AdminResourceController;
 use App\Http\Controllers\Marketing\AffiliateResourceController;
 use App\Http\Controllers\Marketing\PressResourceController;
@@ -171,4 +172,29 @@ Route::middleware('firebase.webhook')->prefix('job-tracker')->group(function () 
     Route::post('/sites', [JobTrackerController::class, 'createSite']);
     Route::put('/sites/{id}', [JobTrackerController::class, 'updateSite']);
     Route::delete('/sites/{id}', [JobTrackerController::class, 'destroySite']);
+
+    // Categories
+    Route::get('/categories', [JobContactController::class, 'listCategories']);
+    Route::post('/categories', [JobContactController::class, 'createCategory']);
+    Route::put('/categories/{id}', [JobContactController::class, 'updateCategory']);
+    Route::delete('/categories/{id}', [JobContactController::class, 'destroyCategory']);
+
+    // Contacts — static routes FIRST
+    Route::get('/contacts', [JobContactController::class, 'listContacts']);
+    Route::post('/contacts', [JobContactController::class, 'createContact']);
+    Route::get('/contacts/stats', [JobContactController::class, 'contactStats']);
+    Route::get('/contacts/duplicates', [JobContactController::class, 'getDuplicates']);
+    Route::post('/contacts/import-csv', [JobContactController::class, 'importCSV']);
+    Route::post('/contacts/import-zip', [JobContactController::class, 'importZip']);
+    Route::post('/contacts/analyze-file', [JobContactController::class, 'analyzeFile']);
+    Route::post('/contacts/merge', [JobContactController::class, 'mergeDuplicates']);
+    Route::post('/contacts/bulk-delete', [JobContactController::class, 'bulkDelete']);
+    Route::post('/contacts/bulk-category', [JobContactController::class, 'bulkUpdateCategory']);
+    Route::post('/contacts/bulk-status', [JobContactController::class, 'bulkUpdateStatus']);
+    Route::post('/contacts/check-sos', [JobContactController::class, 'checkSosStatus']);
+    Route::post('/contacts/check-sos-all', [JobContactController::class, 'checkAllSosStatus']);
+
+    // Contacts — parametric routes AFTER static routes
+    Route::put('/contacts/{id}', [JobContactController::class, 'updateContact']);
+    Route::delete('/contacts/{id}', [JobContactController::class, 'destroyContact']);
 });

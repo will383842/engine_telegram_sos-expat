@@ -60,6 +60,12 @@ RUN echo '[www]' > /usr/local/etc/php-fpm.d/zz-custom.conf \
     && echo 'pm.min_spare_servers = 2' >> /usr/local/etc/php-fpm.d/zz-custom.conf \
     && echo 'pm.max_spare_servers = 6' >> /usr/local/etc/php-fpm.d/zz-custom.conf
 
+# PHP upload/memory limits (for ZIP import up to 100MB)
+RUN echo 'upload_max_filesize=128M' > /usr/local/etc/php/conf.d/uploads.ini \
+    && echo 'post_max_size=128M' >> /usr/local/etc/php/conf.d/uploads.ini \
+    && echo 'memory_limit=256M' >> /usr/local/etc/php/conf.d/uploads.ini \
+    && echo 'max_execution_time=300' >> /usr/local/etc/php/conf.d/uploads.ini
+
 # OPcache config
 RUN echo 'opcache.enable=1' > /usr/local/etc/php/conf.d/opcache-custom.ini \
     && echo 'opcache.memory_consumption=128' >> /usr/local/etc/php/conf.d/opcache-custom.ini \

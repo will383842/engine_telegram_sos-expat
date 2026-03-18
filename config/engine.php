@@ -6,4 +6,8 @@ return [
 
     // Firebase project
     'firebase_project_id' => env('FIREBASE_PROJECT_ID', 'sos-urgently-ac307'),
+
+    // Anthropic API for CV analysis
+    'anthropic_api_key' => env('ANTHROPIC_API_KEY', ''),
+    'cv_analysis_model' => env('CV_ANALYSIS_MODEL', 'claude-sonnet-4-20250514'),
 ];
