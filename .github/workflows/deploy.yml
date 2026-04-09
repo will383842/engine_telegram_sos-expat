@@ -8,7 +8,7 @@ jobs:
   deploy:
     name: Deploy to Hetzner VPS
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - name: Deploy via SSH
@@ -17,16 +17,17 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: root
           password: ${{ secrets.SERVER_PASSWORD }}
-          script_stop: true
+          command_timeout: 12m
           script: |
+            set -e
             cd /opt/engine-telegram
 
             # Pull latest code
             git fetch origin main
             git reset --hard origin/main
 
-            # Rebuild and restart ALL containers (app, queue, scheduler share same Dockerfile)
-            docker compose build --no-cache app queue scheduler
+            # Rebuild and restart containers
+            docker compose build app queue scheduler
             docker compose up -d --force-recreate app queue scheduler nginx
 
             # Clear Laravel caches
