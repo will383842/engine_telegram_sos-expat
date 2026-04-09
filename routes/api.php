@@ -19,6 +19,18 @@ use App\Http\Controllers\TemplateController;
 use Illuminate\Support\Facades\Route;
 
 /* ==========================================================================
+ * Health check (no auth)
+ * ======================================================================== */
+
+Route::get('/health', function () {
+    return response()->json([
+        'status' => 'ok',
+        'service' => 'telegram-engine',
+        'timestamp' => now()->toIso8601String(),
+    ]);
+});
+
+/* ==========================================================================
  * Firebase trigger events (secured by API secret)
  * ======================================================================== */
 
